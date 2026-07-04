@@ -273,7 +273,6 @@ if modulo == "📊 Recepción de Materia Prima":
                     </div>
                 </div></body></html>
             """
-            # Se aumentó la altura a 900 para que no se corte el pie de página
             components.html(documento_imprimible, height=900, scrolling=True)
 
 # ==============================================================================
@@ -288,42 +287,36 @@ else:
         st.subheader("Datos de Control de Trazabilidad")
         c1, c2, c3 = st.columns(3)
         with c1:
-            traz_fecha = st.date_input("Fecha de Control[cite: 2]:", value=datetime.now())
+            traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
         with c2:
-            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso[cite: 2]:", value=st.session_state.traz_hora_inicio, placeholder="ej: 06:00 AM")
-            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso[cite: 2]:", value=st.session_state.traz_hora_fin, placeholder="ej: 03:30 PM")
+            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value=st.session_state.traz_hora_inicio, placeholder="ej: 06:00 AM")
+            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso:", value=st.session_state.traz_hora_fin, placeholder="ej: 03:30 PM")
         with c3:
-            st.session_state.traz_elaborado = st.text_input("Elaborado Por[cite: 2]:", value=st.session_state.traz_elaborado)
+            st.session_state.traz_elaborado = st.text_input("Elaborado Por:", value=st.session_state.traz_elaborado)
 
     with tab_traz_registro:
         st.subheader("Ingreso de Datos de Cadena y Rendimiento")
         
         with st.form("form_trazabilidad", clear_on_submit=True):
-            r1, r2, r3, r4 = st.columns(4)
+            r1, r2, r3 = st.columns(3)
             with r1:
-                f_almacenamiento = st.date_input("Fecha de Almacenamiento[cite: 2]:")
-                n_termo = st.text_input("No. de Termo[cite: 2]:")
-                
-                # --- SOLUCIÓN: Campos fijos para evitar que el Formulario de Streamlit los pierda ---
-                prod_sel = st.selectbox("Seleccione Producto Base[cite: 2]:", PRODUCTOS_TRAZABILIDAD_LISTA)
+                f_almacenamiento = st.date_input("Fecha de Almacenamiento:")
+                n_termo = st.text_input("No. de Termo:")
+                prod_sel = st.selectbox("Seleccione Producto Base:", PRODUCTOS_TRAZABILIDAD_LISTA)
                 especie_manual = st.text_input("Escriba Producto Manual (Si seleccionó la opción manual arriba):")
-                
-                # Lógica de asignación final externa
                 desc_producto = especie_manual if prod_sel == "➕ Escribir manualmente..." else prod_sel
                 
             with r2:
-                lote_traz = st.text_input("Lote[cite: 2]:")
-                tipo_proceso = st.text_input("Fecha y Tipo de Proceso Aplicado[cite: 2]:", placeholder="ej: 04/07 - Eviscerado")
-                n_termo_destino = st.text_input("N° de Termo Destino[cite: 2]:")
+                lote_traz = st.text_input("Lote:")
+                tipo_proceso = st.text_input("Fecha y Tipo de Proceso Aplicado:", placeholder="ej: 04/07 - Eviscerado")
+                n_termo_destino = st.text_input("N° de Termo Destino:")
             with r3:
-                p_inicial = st.number_input("Peso Inicial (Lbs)[cite: 2]:", min_value=0.0, step=0.1)
-                p_final = st.number_input("Peso Final (Lbs)[cite: 2]:", min_value=0.0, step=0.1)
-            with r4:
-                r_esperado = st.number_input("Rendimiento Esperado (%)[cite: 2]:", min_value=0.0, max_value=100.0, value=85.0, step=0.1)
-                proceso_destino = st.text_input("Fecha y Proceso Destino[cite: 2]:", placeholder="ej: 05/07 - Congelación")
+                p_inicial = st.number_input("Peso Inicial (Lbs):", min_value=0.0, step=0.1)
+                p_final = st.number_input("Peso Final (Lbs):", min_value=0.0, step=0.1)
+                proceso_destino = st.text_input("Fecha y Proceso Destino:", placeholder="ej: 05/07 - Congelación")
                 
             if st.form_submit_button("➕ REGISTRAR FILA DE TRAZABILIDAD"):
-                # Cálculo de rendimiento automático
+                # Cálculo automático del rendimiento
                 rend_real = (p_final / p_inicial * 100) if p_inicial > 0 else 0.0
                 
                 nueva_fila_traz = {
@@ -336,7 +329,6 @@ else:
                     "Peso Final": p_final,
                     "Termo Destino": n_termo_destino,
                     "Rendimiento Real": f"{rend_real:.1f}%",
-                    "Rendimiento Esperado": f"{r_esperado:.1f}%",
                     "Proceso Destino": proceso_destino
                 }
                 st.session_state.filas_trazabilidad.append(nueva_fila_traz)
@@ -355,7 +347,7 @@ else:
         if st.session_state.filas_trazabilidad:
             traz_rows_html = ""
             filas_traz_imp = st.session_state.filas_trazabilidad.copy()
-            while len(filas_traz_imp) < 15: filas_traz_imp.append({}) # Asegura las 15 filas del formato[cite: 2]
+            while len(filas_traz_imp) < 15: filas_traz_imp.append({}) 
             
             for ft in filas_traz_imp:
                 traz_rows_html += f"""
@@ -368,8 +360,7 @@ else:
                     <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Inicial', ''):,.1f}" if ft.get('Peso Inicial') else ''}</td>
                     <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Final', ''):,.1f}" if ft.get('Peso Final') else ''}</td>
                     <td style="border: 1px solid #000;">{ft.get('Termo Destino', '')}</td>
-                    <td style="border: 1px solid #000; color: black; font-weight: bold;">{ft.get('Rendimiento Real', '')}</td>
-                    <td style="border: 1px solid #000; color: black;">{ft.get('Rendimiento Esperado', '')}</td>
+                    <td style="border: 1px solid #000; color: black; font-weight: bold;" colspan="2">{ft.get('Rendimiento Real', '')}</td>
                     <td style="border: 1px solid #000; font-size: 7.5pt;">{ft.get('Proceso Destino', '')}</td>
                 </tr>
                 """
@@ -402,21 +393,19 @@ else:
                             <tr style="background-color: #ffffff; height: 35px;">
                                 <th style="border: 1px solid #000; width: 9%;">FECHA DE<br>Almacenamiento</th>
                                 <th style="border: 1px solid #000; width: 7%;">No. DE<br>TERMO</th>
-                                <th style="border: 1px solid #000; width: 20%;">DESCRIPCION DEL PRODUCTO</th>
+                                <th style="border: 1px solid #000; width: 22%;">DESCRIPCION DEL PRODUCTO</th>
                                 <th style="border: 1px solid #000; width: 9%;">LOTE</th>
                                 <th style="border: 1px solid #000; width: 14%;">FECHA Y TIPO DE<br>PROCESO APLICADO</th>
                                 <th style="border: 1px solid #000; width: 7%;">PESO INICIAL</th>
                                 <th style="border: 1px solid #000; width: 7%;">PESO FINAL</th>
                                 <th style="border: 1px solid #000; width: 7%;">N° DE TERMO<br>DESTINO</th>
-                                <th style="border: 1px solid #000; width: 8%;">RENDIMEINTO<br>REAL</th>
-                                <th style="border: 1px solid #000; width: 8%;">REDIMEINTO<br>ESPERADO</th>
+                                <th style="border: 1px solid #000; width: 10%;" colspan="2">RENDIMIENTO AUTOMÁTICO</th>
                                 <th style="border: 1px solid #000; width: 12%;">FECHA Y PROCESO<br>DESTINO</th>
                             </tr>
                         </thead>
                         <tbody>{traz_rows_html}</tbody>
                     </table>
                     
-                    <!-- PIE DE PÁGINA COMPLETO -->
                     <div style="margin-top: 15px; font-size: 8.5pt; font-family: 'Arial', sans-serif;">
                         <b>OBSERVACIONES:</b>____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________<br><br><br>
                         
@@ -429,7 +418,6 @@ else:
                     </div>
                 </div></body></html>
             """
-            # Se aumentó la altura a 900 para que se logre ver todo el pie de página holgadamente
             components.html(documento_traz_html, height=900, scrolling=True)
         else:
             st.warning("⚠️ Agregue registros en la pestaña de procesamiento para ver la hoja de trazabilidad oficial.")
