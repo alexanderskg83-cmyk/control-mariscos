@@ -150,7 +150,7 @@ if modulo == "📊 Recepción de Materia Prima":
                 @page {{ size: letter landscape; margin: 0.15in; }}
             }}
             body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
-            #hoja-oficial {{ background: white; width: 11.1in; height: 8.2in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            #hoja-oficial {{ background: white; width: 11.1in; height: 7.4in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
             .header-table {{ margin-bottom: 8px; width: 100%; border-collapse: collapse; }}
             .grid-container {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; border: 1px solid #000; padding: 5px; font-size: 8.5pt; margin-bottom: 8px; line-height: 1.5; }}
             table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
@@ -202,11 +202,10 @@ if modulo == "📊 Recepción de Materia Prima":
                     
                     <div class="obs-lines">
                         <b>Observaciones:</b> _________________________________________________________________________________________________________________________________________________<br>
-                        ................................................................................................................................................................................................................................................<br>
                         ................................................................................................................................................................................................................................................
                     </div>
                     
-                    <table style="border: none; margin-top: 25px; text-align: center; font-size: 8pt; width: 100%;">
+                    <table style="border: none; margin-top: 15px; text-align: center; font-size: 8pt; width: 100%;">
                         <tr style="background: none;">
                             <td style="border: none; padding-top: 2px;">___________________________<br><b>ENTREGADO POR:</b></td>
                             <td style="border: none; padding-top: 2px;">___________________________<br><b>SUPERVISADO POR:</b></td>
@@ -214,20 +213,21 @@ if modulo == "📊 Recepción de Materia Prima":
                         </tr>
                     </table>
                     
-                    <!-- NUEVO PIE DE PÁGINA EXTRAÍDO TEXTUALMENTE DE LA IMAGEN (image_ae1385.png) -->
+                    <!-- LÍNEA EN VERDE (NUEVA UBICACIÓN POR ENCIMA DEL BLOQUE TÉCNICO) -->
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 8px; margin-bottom: 4px;">
+                    
                     <div class="custom-recepcion-footer">
                         <b>Límite crítico:</b> Temperatura del producto &le; 4°C;<br>
                         <b>Frecuencia del monitoreo:</b> En cada recepción de materia prima, por cada 2 cajillas pesadas se verifica la temperatura, Cada vez que se recibe MP se hace el evaluación sensorial a cada unidad recibida, sino cumple con el con los parámetros sensoriales el producto se rechaza.<br>
                         <b>Modificado el 16/12/2024//Modificado 19/03/2026//Modificado 14/05/2026</b>
-                        <hr style="border: 0; border-top: 1px solid #000; margin-top: 4px; margin-bottom: 2px;">
-                        <div style="text-align: center; font-size: 6.8pt; font-weight: bold;">
+                        <div style="text-align: center; font-size: 6.8pt; font-weight: bold; margin-top: 4px;">
                             Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
                         </div>
                     </div>
                 </div>
             </div></body></html>
         """
-        components.html(documento_imprimible, height=830, scrolling=True)
+        components.html(documento_imprimible, height=750, scrolling=True)
 
 # ==============================================================================
 # MÓDULO 2: SEGUIMIENTO DE TRAZABILIDAD (FT-PROD-03)
@@ -305,7 +305,7 @@ else:
                 @page {{ size: letter landscape; margin: 0.15in; }}
             }}
             body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
-            #hoja-trazabilidad {{ background: white; width: 11.1in; height: 8.2in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            #hoja-trazabilidad {{ background: white; width: 11.1in; height: 7.4in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
             .header-table {{ margin-bottom: 8px; width: 100%; border-collapse: collapse; }}
             .grid-traz {{ display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.8fr; border: 1px solid #000; padding: 5px; font-size: 9pt; margin-bottom: 8px; line-height: 1.4; }}
             table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
@@ -347,25 +347,26 @@ else:
                 
                 <div class="obs-title">
                     <b>OBSERVACIONES:</b> _________________________________________________________________________________________________________________________________________________________________<br>
-                    ............................................................................................................................................................................................................................................................................<br>
                     ............................................................................................................................................................................................................................................................................
                     
-                    <table style="border: none; margin-top: 22px; width: 100%;">
+                    <table style="border: none; margin-top: 15px; width: 100%;">
                         <tr style="background: none;">
                             <td style="border: none; text-align: left; font-size: 9pt; padding: 0;"><b>Supervisado por:</b> ___________________________</td>
                             <td style="border: none; text-align: right; font-size: 9pt; padding: 0;"><b>Verificado por:</b> ___________________________</td>
                         </tr>
                     </table>
                     
+                    <!-- LÍNEA EN VERDE (NUEVA UBICACIÓN POR ENCIMA DEL BLOQUE TÉCNICO) -->
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 8px; margin-bottom: 4px;">
+                    
                     <div class="custom-traz-footer">
-                        <b>Frecuencia del monitoreo:</b> Cada vez que se procesen productos en las Áreas de Almacenamiento Materia Prima, Procesos Varios, Fileteo, Empaque Al Vacío, Empaque Congelado.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Temperatura:</b> inferior a &le; -4.0°C.<br>
+                        <b>Frecuencia del monitoreo:</b> Cada vez que se procesen productos en las Áreas de Almacenamiento Materia Prima, Procesos Varios, Fileteo, Empaque Al Vacío, Empaque Congelado.&nbsp;&nbsp;&nbsp;&nbsp;<b>Temperatura:</b> inferior a &le; -4.0°C.<br>
                         <span style="font-weight: bold;">Elaborado el 09/08/2024</span>
-                        <hr style="border: 0; border-top: 1px solid #000; margin-top: 4px; margin-bottom: 3px;">
-                        <div style="text-align: center; font-weight: bold; font-size: 7pt;">
+                        <div style="text-align: center; font-weight: bold; font-size: 7pt; margin-top: 4px;">
                             Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
                         </div>
                     </div>
                 </div>
             </div></body></html>
         """
-        components.html(documento_traz_html, height=830, scrolling=True)
+        components.html(documento_traz_html, height=750, scrolling=True)
