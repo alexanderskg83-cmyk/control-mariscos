@@ -8,14 +8,12 @@ st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="�
 # ==========================================
 # LISTAS PREDETERMINADAS
 # ==========================================
-# Listas de Recepción (Módulo 1)
 PROVEEDORES_LISTA = ["Chester Espinoza", "Distribuidora del Mar", "Cooperativa Masachapa", "Darvin Lopez", "➕ Escribir manualmente..."]
 ZONAS_LISTA = ["Masachapa", "Casares", "San Juan del Sur", "Granja interna", "Las Poritas", "➕ Escribir manualmente..."]
 PERSONAL_LISTA = ["W. Solis / E. Palacios", "Maikelyn Zelaya", "D. Fonseca / M. Morales", "Alice Mendoza", "➕ Escribir manualmente..."]
 ESPECIES_LISTA = ["Macuá 1-2", "Macuá 2-4", "Macuá 4-6", "C/Amarilla 2-4", "C/Amarilla 4-6", "Dientón 1-3", "Dientón 3-5", "Guacamayo 1-3", "➕ Escribir manualmente..."]
 
-# --- [NUEVO] Lista de Sugerencias para Trazabilidad (Módulo 2) ---
-# Modifica esta lista con los valores que me proporcionarás después
+# Lista de Sugerencias para Trazabilidad (Módulo 2)
 PRODUCTOS_TRAZABILIDAD_LISTA = [
     "Filete de Tilapia Fresh 2-4 oz", 
     "Filete de Tilapia Fresh 4-6 oz", 
@@ -146,7 +144,8 @@ if modulo == "📊 Recepción de Materia Prima":
             c1, c2, c3, c4 = st.columns([2, 2, 1, 1])
             with c1:
                 esp_sel = st.selectbox("Especie / Talla:", ESPECIES_LISTA)
-                especie = st.text_input("Escriba Especie Manual:") if esp_sel == "➕ Escribir manualmente..." else esp_sel
+                especie_manual = st.text_input("Escriba Especie Manual (si aplica):")
+                especie = especie_manual if esp_sel == "➕ Escribir manualmente..." else esp_sel
                 lote = st.text_input("Lote:", value=lote_sugerido)
             with c2:
                 termo = st.text_input("Nº Termos:", value=termo_sugerido)
@@ -274,7 +273,8 @@ if modulo == "📊 Recepción de Materia Prima":
                     </div>
                 </div></body></html>
             """
-            components.html(documento_imprimible, height=760, scrolling=True)
+            # Se aumentó la altura a 900 para que no se corte el pie de página
+            components.html(documento_imprimible, height=900, scrolling=True)
 
 # ==============================================================================
 # MÓDULO 2: SEGUIMIENTO DE TRAZABILIDAD
@@ -288,7 +288,7 @@ else:
         st.subheader("Datos de Control de Trazabilidad")
         c1, c2, c3 = st.columns(3)
         with c1:
-            traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
+            traz_fecha = st.date_input("Fecha de Control[cite: 2]:", value=datetime.now())
         with c2:
             st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso[cite: 2]:", value=st.session_state.traz_hora_inicio, placeholder="ej: 06:00 AM")
             st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso[cite: 2]:", value=st.session_state.traz_hora_fin, placeholder="ej: 03:30 PM")
@@ -304,9 +304,12 @@ else:
                 f_almacenamiento = st.date_input("Fecha de Almacenamiento[cite: 2]:")
                 n_termo = st.text_input("No. de Termo[cite: 2]:")
                 
-                # --- [NUEVO] Desplegable con Sugerencias de Descripción de Especies y Productos ---
-                prod_sel = st.selectbox("Descripción del Producto[cite: 2]:", PRODUCTOS_TRAZABILIDAD_LISTA)
-                desc_producto = st.text_input("Escriba Producto Manual (si marcó escribir manualmente):") if prod_sel == "➕ Escribir manualmente..." else prod_sel
+                # --- SOLUCIÓN: Campos fijos para evitar que el Formulario de Streamlit los pierda ---
+                prod_sel = st.selectbox("Seleccione Producto Base[cite: 2]:", PRODUCTOS_TRAZABILIDAD_LISTA)
+                especie_manual = st.text_input("Escriba Producto Manual (Si seleccionó la opción manual arriba):")
+                
+                # Lógica de asignación final externa
+                desc_producto = especie_manual if prod_sel == "➕ Escribir manualmente..." else prod_sel
                 
             with r2:
                 lote_traz = st.text_input("Lote[cite: 2]:")
@@ -320,7 +323,7 @@ else:
                 proceso_destino = st.text_input("Fecha y Proceso Destino[cite: 2]:", placeholder="ej: 05/07 - Congelación")
                 
             if st.form_submit_button("➕ REGISTRAR FILA DE TRAZABILIDAD"):
-                # --- [NUEVO] Cálculo de rendimiento automático exacto (Final / Inicial * 100) ---
+                # Cálculo de rendimiento automático
                 rend_real = (p_final / p_inicial * 100) if p_inicial > 0 else 0.0
                 
                 nueva_fila_traz = {
@@ -371,7 +374,6 @@ else:
                 </tr>
                 """
                 
-            # --- [NUEVO] Formato Inferior Idéntico al Documento Compartido ---
             documento_traz_html = f"""
             <html><head><style>
                 @media print {{ button {{ display: none !important; }} body {{ background-color: white; color: black; padding: 0; margin: 0; }} }}
@@ -414,8 +416,8 @@ else:
                         <tbody>{traz_rows_html}</tbody>
                     </table>
                     
-                    <!-- PARTE INFERIOR IDENTICA AL FORMATO COMPARTIDO -->
-                    <div style="margin-top: 12px; font-size: 8.5pt; font-family: 'Arial', sans-serif;">
+                    <!-- PIE DE PÁGINA COMPLETO -->
+                    <div style="margin-top: 15px; font-size: 8.5pt; font-family: 'Arial', sans-serif;">
                         <b>OBSERVACIONES:</b>____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________<br><br><br>
                         
                         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 8.5pt;">
@@ -427,6 +429,7 @@ else:
                     </div>
                 </div></body></html>
             """
-            components.html(documento_traz_html, height=780, scrolling=True)
+            # Se aumentó la altura a 900 para que se logre ver todo el pie de página holgadamente
+            components.html(documento_traz_html, height=900, scrolling=True)
         else:
             st.warning("⚠️ Agregue registros en la pestaña de procesamiento para ver la hoja de trazabilidad oficial.")
