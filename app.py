@@ -88,7 +88,7 @@ if modulo == "📊 Recepción de Materia Prima":
                 color = st.selectbox("Color:", ["E", "B", "MB", "N/A"])
             with c4:
                 textura = st.selectbox("Textura:", ["E", "B", "MB", "N/A"])
-                sabor = st.selectbox("Sabor:", ["N/A", "E", "B", "MB"])
+                sabor = st.selectbox("Sabor:", ["N/A", "C", "NC", "MP"])
             
             st.markdown("**Pesos (Lbs)**")
             pw = st.columns(8)
@@ -111,7 +111,9 @@ if modulo == "📊 Recepción de Materia Prima":
         gran_total_libras = 0.0
         html_rows = ""
         filas_imprimir = st.session_state.filas_actuales.copy()
-        while len(filas_imprimir) < 11: filas_imprimir.append({})
+        
+        # AÑADIDAS 4 FILAS MÁS (De 11 subió a 15 filas fijas)
+        while len(filas_imprimir) < 15: filas_imprimir.append({})
 
         for f in filas_imprimir:
             suma_fila = 0.0
@@ -127,7 +129,7 @@ if modulo == "📊 Recepción de Materia Prima":
                 <td style="border: 1px solid #000;">{f.get('Lote', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Olor', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Color', '')}</td>
-                <td style="border: 1px solid #000;">{f.get('Textura', '')} </td>
+                <td style="border: 1px solid #000;">{f.get('Textura', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Sabor', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Nº Termos', '')}</td>
                 <td style="border: 1px solid #000; font-weight: bold;">{f.get('ºC', '')}</td>
@@ -201,9 +203,8 @@ if modulo == "📊 Recepción de Materia Prima":
                     <b>Evaluación Sensorial:</b> B: Bueno, MB: Muy Bueno; E: Excelente; N/A: No Aplica; AC: Acción Correctiva; <b>SABOR:</b> C: caracteristico, NC: No Conforme, MP: materia prima.<br>
                     
                     <div class="obs-lines">
-                        <b>Observaciones:</b> ___________________________________________________________________________________________________________________________________________________<br>
-                       <b>  _________________________________________________________________________________________________________________________________________________________________________________________<br>
-
+                        <b>Observaciones:</b> _________________________________________________________________________________________________________________________________________________<br>
+                        ................................................................................................................................................................................................................................................
                     </div>
                     
                     <table style="border: none; margin-top: 15px; text-align: center; font-size: 8pt; width: 100%;">
@@ -211,7 +212,6 @@ if modulo == "📊 Recepción de Materia Prima":
                             <td style="border: none; padding-top: 2px;">___________________________<br><b>ENTREGADO POR:</b></td>
                             <td style="border: none; padding-top: 2px;">___________________________<br><b>SUPERVISADO POR:</b></td>
                             <td style="border: none; padding-top: 2px;">___________________________<br><b>VERIFICADO POR:</b></td>
-
                         </tr>
                     </table>
                     
@@ -280,7 +280,9 @@ else:
     with tab_traz_impresion:
         traz_rows_html = ""
         filas_traz_imp = st.session_state.filas_trazabilidad.copy()
-        while len(filas_traz_imp) < 13: filas_traz_imp.append({})
+        
+        # AÑADIDAS 4 FILAS MÁS (De 13 subió a 17 filas fijas)
+        while len(filas_traz_imp) < 17: filas_traz_imp.append({})
         
         for ft in filas_traz_imp:
             traz_rows_html += f"""
@@ -347,20 +349,16 @@ else:
                 </div>
                 
                 <div class="obs-title">
-                    <b>OBSERVACIONES:</b> <br> ________________________________________________________________________________________________________________________________________________________</tb>
-                    <br>__________________________________________________________________________________________________________________________________________________________________________________________________________________</tb>
+                    <b>OBSERVACIONES:</b> _________________________________________________________________________________________________________________________________________________________________<br>
+                    ............................................................................................................................................................................................................................................................................
                     
                     <table style="border: none; margin-top: 15px; margin-bottom: 5px; width: 100%;">
                         <tr style="background: none;">
                             <td style="border: none; text-align: left; font-size: 9pt; padding: 0;"><b>Supervisado por:</b> ___________________________</td>
                             <td style="border: none; text-align: right; font-size: 9pt; padding: 0;"><b>Verificado por:</b> ___________________________</td>
-
-
-
                         </tr>
                     </table>
                     
-                    <!-- LÍNEA CON ESPACIADO EXTRA SOLICITADO -->
                     <hr style="border: 0; border-top: 1px solid #000; margin-top: 15px; margin-bottom: 10px;">
                     
                     <div class="custom-traz-footer">
