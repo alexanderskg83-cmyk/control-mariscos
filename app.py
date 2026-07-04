@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="🐟", layout="wide")
 
 # ==========================================
-# LISTAS PREDETERMINDetermined
+# LISTAS PREDETERMINADAS
 # ==========================================
 PROVEEDORES_LISTA = ["Chester Espinoza", "Distribuidora del Mar", "Cooperativa Masachapa", "Darvin Lopez", "➕ Escribir manualmente..."]
 ZONAS_LISTA = ["Masachapa", "Casares", "San Juan del Sur", "Granja interna", "Las Poritas", "➕ Escribir manualmente..."]
@@ -29,7 +29,7 @@ if 'traz_hora_fin' not in st.session_state: st.session_state.traz_hora_fin = ""
 if 'traz_elaborado' not in st.session_state: st.session_state.traz_elaborado = ""
 
 LOGO_NICALAPIA_SVG = """
-<svg width="85" height="70" viewBox="15 15 90 90" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;">
+<svg width="85" height="65" viewBox="15 15 90 90" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;">
     <path d="M 20 62 A 40 40 0 1 1 100 62" fill="none" stroke="#124491" stroke-width="3.5" stroke-linecap="round"/>
     <circle cx="74" cy="40" r="4.5" fill="#124491"/>
     <path d="M 22 61 L 45 32 L 61 56" fill="none" stroke="#124491" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -111,7 +111,7 @@ if modulo == "📊 Recepción de Materia Prima":
         gran_total_libras = 0.0
         html_rows = ""
         filas_imprimir = st.session_state.filas_actuales.copy()
-        while len(filas_imprimir) < 12: filas_imprimir.append({}) # 12 filas altas para abarcar la hoja
+        while len(filas_imprimir) < 11: filas_imprimir.append({})
 
         for f in filas_imprimir:
             suma_fila = 0.0
@@ -122,7 +122,7 @@ if modulo == "📊 Recepción de Materia Prima":
                 gran_total_libras += suma_fila
             txt_suma_fila = f"{suma_fila:,.1f}" if f and suma_fila > 0 else ""
             html_rows += f"""
-            <tr style="height: 32px;">
+            <tr style="height: 26px;">
                 <td style="border: 1px solid #000; text-align: left; padding-left: 5px; font-weight: bold;">{f.get('Especie/Talla', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Lote', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Olor', '')}</td>
@@ -149,24 +149,25 @@ if modulo == "📊 Recepción de Materia Prima":
                 body {{ background-color: white; color: black; padding: 0; margin: 0; }} 
                 @page {{ size: letter landscape; margin: 0.15in; }}
             }}
-            body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 5px; }}
-            #hoja-oficial {{ background: white; width: 10.7in; height: 8.2in; margin: 0 auto; box-sizing: border-box; padding: 8px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
-            .grid-container {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; border: 1px solid #000; padding: 6px; font-size: 8.5pt; margin-bottom: 5px;}}
+            body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
+            #hoja-oficial {{ background: white; width: 11.1in; height: 8.2in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            .grid-container {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; border: 1px solid #000; padding: 5px; font-size: 8.5pt; margin-bottom: 4px;}}
             table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
             th, td {{ border: 1px solid #000; overflow: hidden; }}
-            .footer-section {{ font-size: 7.5pt; line-height: 1.35; text-align: justify; margin-top: 6px; }}
+            .footer-section {{ font-size: 7.2pt; line-height: 1.3; text-align: justify; margin-top: 5px; }}
+            .obs-lines {{ margin-top: 3px; font-size: 8.5pt; line-height: 1.4; }}
         </style></head><body>
-            <div style="text-align: center; margin-bottom: 5px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR RECEPCIÓN (FT-HACCP-005)</button></div>
+            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR RECEPCIÓN (FT-HACCP-005)</button></div>
             <div id="hoja-oficial">
                 <div>
-                    <table style="margin-bottom: 5px;">
+                    <table style="margin-bottom: 4px;">
                         <tr>
-                            <td style="width: 15%; padding: 2px;">{LOGO_NICALAPIA_SVG}</td>
-                            <td style="width: 63%; vertical-align: middle;">
-                                <span style="font-size: 13pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
+                            <td style="width: 14%; padding: 1px;">{LOGO_NICALAPIA_SVG}</td>
+                            <td style="width: 64%; vertical-align: middle;">
+                                <span style="font-size: 13.5pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
                                 <span style="font-size: 11.5pt; font-weight: bold;">FORMATO: CLASIFICACION Y RECEPCION DE MATERIA PRIMA</span>
                             </td>
-                            <td style="width: 22%; font-size: 8.5pt; font-weight: bold; text-align: left; padding-left: 8px; line-height: 1.4; border-left: 2px solid #000;">CODIGO: FT-HACCP-005<br>FECHA ULTIMA VERSION:<br>Mayo 2026<br>Versión: 1</td>
+                            <td style="width: 22%; font-size: 8.5pt; font-weight: bold; text-align: left; padding-left: 8px; line-height: 1.3; border-left: 2px solid #000;">CODIGO: FT-HACCP-005<br>FECHA ULTIMA VERSION:<br>Mayo 2026<br>Versión: 1</td>
                         </tr>
                     </table>
                     <div class="grid-container">
@@ -180,36 +181,48 @@ if modulo == "📊 Recepción de Materia Prima":
                             {"".join(['<col style="width: 5%;">' for i in range(1,9)])}<col style="width: 10%;">
                         </colgroup>
                         <thead>
-                            <tr style="background-color: #f2f2f2; height: 20px;">
+                            <tr style="background-color: #f2f2f2; height: 18px;">
                                 <th rowspan="2">ESPECIE/TALLA</th><th rowspan="2">LOTE</th><th colspan="4">EVALUACION SENSORIAL</th><th rowspan="2">No<br>TERMOS</th><th rowspan="2">ºC</th><th colspan="8">PESO</th><th rowspan="2">TOTAL</th>
                             </tr>
-                            <tr style="background-color: #f2f2f2; height: 20px;">
+                            <tr style="background-color: #f2f2f2; height: 18px;">
                                 <th style="font-size: 7pt;">OLOR</th><th style="font-size: 7pt;">COLOR</th><th style="font-size: 7pt;">TEXRURA</th><th style="font-size: 7pt;">SABOR</th>
                                 {"".join([f'<th style="font-size: 8pt;">{i}</th>' for i in range(1,9)])}
                             </tr>
                         </thead>
                         <tbody>
                             {html_rows}
-                            <tr style="height: 28px; background-color: #f2f2f2; font-weight: bold;"><td colspan="16" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="font-size: 9.5pt;">{gran_total_libras:,.1f}</td></tr>
+                            <tr style="height: 24px; background-color: #f2f2f2; font-weight: bold;"><td colspan="16" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="font-size: 9.5pt;">{gran_total_libras:,.1f}</td></tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="footer-section">
                     <b>Evaluación Sensorial:</b> B: Bueno, MB: Muy Bueno; E: Excelente; N/A: No Aplica; AC: Acción Correctiva; <b>SABOR:</b> C: caracteristico, NC: No Conforme, MP: materia prima.<br>
-                    <b>Limite crítico:</b> Temperatura del producto &le; 4.4°C; <b>Frecuencia del monitoreo:</b> En cada recepción de materia prima, por cada 2 cajillas pesadas se verifica la temperatura. Cada vez que se recibe MP se hace la evaluación sensorial a cada unidad recibida, si no cumple con los parámetros sensoriales el producto se rechaza.<br>
-                    <div style="margin-top: 4px;"><b>Observaciones:</b> ____________________________________________________________________________________________________________________</div>
-                    <table style="border: none; margin-top: 8px; text-align: center; font-size: 8pt; width: 100%;">
-                        <tr style="background: none;"><td style="border: none; padding-top: 2px;">___________________________<br><b>ENTREGADO POR:</b></td><td style="border: none; padding-top: 2px;">___________________________<br><b>SUPERVISADO POR:</b></td><td style="border: none; padding-top: 2px;">___________________________<br><b>VERIFICADO POR:</b></td></tr>
+                    <b>Limite crítico:</b> Temperatura del producto &le; 4.4°C; <b>Frecuencia del monitoreo:</b> En cada recepción de materia prima.
+                    
+                    <!-- Bloque de 3 líneas para observaciones -->
+                    <div class="obs-lines">
+                        <b>Observaciones:</b> ____________________________________________________________________________________________________________________<br>
+                        ........................................................................................................................................................................................................................<br>
+                        ........................................................................................................................................................................................................................
+                    </div>
+                    
+                    <!-- Bloque de firmas con separación controlada -->
+                    <table style="border: none; margin-top: 25px; text-align: center; font-size: 8pt; width: 100%;">
+                        <tr style="background: none;">
+                            <td style="border: none; padding-top: 2px;">___________________________<br><b>ENTREGADO POR:</b></td>
+                            <td style="border: none; padding-top: 2px;">___________________________<br><b>SUPERVISADO POR:</b></td>
+                            <td style="border: none; padding-top: 2px;">___________________________<br><b>VERIFICADO POR:</b></td>
+                        </tr>
                     </table>
-                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 6px; margin-bottom: 3px;">
-                    <div style="text-align: center; font-size: 7pt; font-weight: bold;">
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 6px; margin-bottom: 2px;">
+                    <div style="text-align: center; font-size: 6.8pt; font-weight: bold;">
                         Modificado el 16/12/2024 // Modificado 19/03/2026 // Modificado 14/05/2026<br>
-                        Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
+                        Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción sin autorización.
                     </div>
                 </div>
             </div></body></html>
         """
-        components.html(documento_imprimible, height=840, scrolling=True)
+        components.html(documento_imprimible, height=830, scrolling=True)
 
 # ==============================================================================
 # MÓDULO 2: SEGUIMIENTO DE TRAZABILIDAD (FT-PROD-03)
@@ -261,11 +274,11 @@ else:
     with tab_traz_impresion:
         traz_rows_html = ""
         filas_traz_imp = st.session_state.filas_trazabilidad.copy()
-        while len(filas_traz_imp) < 16: filas_traz_imp.append({}) # 16 filas altas para cuadrar perfecto la hoja carta
+        while len(filas_traz_imp) < 14: filas_traz_imp.append({})
         
         for ft in filas_traz_imp:
             traz_rows_html += f"""
-            <tr style="height: 25px;">
+            <tr style="height: 23px;">
                 <td style="border: 1px solid #000; font-size: 8.5pt;">{ft.get('Fecha Almacenamiento', '')}</td>
                 <td style="border: 1px solid #000;">{ft.get('No. Termo', '')}</td>
                 <td style="border: 1px solid #000; text-align: left; padding-left: 4px;">{ft.get('Descripcion', '')}</td>
@@ -286,23 +299,24 @@ else:
                 body {{ background-color: white; color: black; padding: 0; margin: 0; }} 
                 @page {{ size: letter landscape; margin: 0.15in; }}
             }}
-            body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 5px; }}
-            #hoja-trazabilidad {{ background: white; width: 10.7in; height: 8.2in; margin: 0 auto; box-sizing: border-box; padding: 8px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
-            .grid-traz {{ display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.8fr; border: 1px solid #000; padding: 6px; font-size: 9pt; margin-bottom: 5px; }}
+            body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
+            #hoja-trazabilidad {{ background: white; width: 11.1in; height: 8.2in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            .grid-traz {{ display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.8fr; border: 1px solid #000; padding: 5px; font-size: 9pt; margin-bottom: 4px; }}
             table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
             th, td {{ border: 1px solid #000; overflow: hidden; }}
+            .obs-title {{ font-size: 8.5pt; font-weight: bold; margin-top: 4px; line-height: 1.4; }}
         </style></head><body>
-            <div style="text-align: center; margin-bottom: 5px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR TRAZABILIDAD (FT-PROD-03)</button></div>
+            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR TRAZABILIDAD (FT-PROD-03)</button></div>
             <div id="hoja-trazabilidad">
                 <div>
-                    <table style="margin-bottom: 5px;">
+                    <table style="margin-bottom: 4px;">
                         <tr>
-                            <td style="width: 15%; padding: 2px;">{LOGO_NICALAPIA_SVG}</td>
-                            <td style="width: 63%; vertical-align: middle;">
-                                <span style="font-size: 13pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
+                            <td style="width: 14%; padding: 1px;">{LOGO_NICALAPIA_SVG}</td>
+                            <td style="width: 64%; vertical-align: middle;">
+                                <span style="font-size: 13.5pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
                                 <span style="font-size: 11pt; font-weight: bold; letter-spacing: 0.2px;">FORMATO DE CONTROL DE TRAZABILIDAD DE PRODUCTO EN PROCESO</span>
                             </td>
-                            <td style="width: 22%; font-size: 8.5pt; font-weight: bold; text-align: left; padding-left: 8px; line-height: 1.4; border-left: 2px solid #000;">CODIGO: FT-PROD-03<br>FECHA ULTIMA VERSION:<br>Julio 2026<br>Versión: 1</td>
+                            <td style="width: 22%; font-size: 8.5pt; font-weight: bold; text-align: left; padding-left: 8px; line-height: 1.3; border-left: 2px solid #000;">CODIGO: FT-PROD-03<br>FECHA ULTIMA VERSION:<br>Julio 2026<br>Versión: 1</td>
                         </tr>
                     </table>
                     <div class="grid-traz">
@@ -316,23 +330,32 @@ else:
                             <col style="width: 11%;"><col style="width: 8%;"><col style="width: 21%;"><col style="width: 9%;"><col style="width: 14%;"><col style="width: 8%;"><col style="width: 8%;"><col style="width: 8%;"><col style="width: 10%;"><col style="width: 13%;">
                         </colgroup>
                         <thead>
-                            <tr style="background-color: #f2f2f2; height: 32px; font-size: 8.5pt;">
+                            <tr style="background-color: #f2f2f2; height: 30px; font-size: 8.5pt;">
                                 <th>FECHA DE<br>Almacenamiento</th><th>No. DE<br>TERMO</th><th>DESCRIPCION DEL PRODUCTO</th><th>LOTE</th><th>FECHA Y TIPO DE<br>PROCESO APLICADO</th><th>PESO INICIAL</th><th>PESO FINAL</th><th>N° DE TERMO<br>DESTINO</th><th>RENDIMIENTO<br>AUTOMÁTICO</th><th>FECHA Y PROCESO<br>DESTINO</th>
                             </tr>
                         </thead>
                         <tbody>{traz_rows_html}</tbody>
                     </table>
                 </div>
-                <div style="font-size: 9pt; margin-top: 6px;">
-                    <div style="margin-bottom: 4px;"><b>OBSERVACIONES:</b> _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________</div>
-                    <table style="border: none; margin-top: 8px; width: 100%;">
-                        <tr style="background: none;"><td style="border: none; text-align: left; font-size: 9pt; padding: 0;"><b>Supervisado por:</b> ___________________________</td><td style="border: none; text-align: right; font-size: 9pt; padding: 0;"><b>Verificado por:</b> ___________________________</td></tr>
+                
+                <!-- Área inferior corregida -->
+                <div class="obs-title">
+                    <b>OBSERVACIONES:</b> _______________________________________________________________________________________________________________________________________________________________________<br>
+                    ..........................................................................................................................................................................................................................................................................<br>
+                    ..........................................................................................................................................................................................................................................................................
+                    
+                    <!-- Bloque de firmas con separación controlada -->
+                    <table style="border: none; margin-top: 25px; width: 100%;">
+                        <tr style="background: none;">
+                            <td style="border: none; text-align: left; font-size: 9pt; padding: 0;"><b>Supervisado por:</b> ___________________________</td>
+                            <td style="border: none; text-align: right; font-size: 9pt; padding: 0;"><b>Verificado por:</b> ___________________________</td>
+                        </tr>
                     </table>
-                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 8px; margin-bottom: 3px;">
-                    <div style="text-align: center; font-size: 7.2pt; color: #000; font-weight: bold;">
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 6px; margin-bottom: 2px;">
+                    <div style="text-align: center; font-size: 7pt; color: #000; font-weight: bold;">
                         Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
                     </div>
                 </div>
             </div></body></html>
         """
-        components.html(documento_traz_html, height=840, scrolling=True)
+        components.html(documento_traz_html, height=830, scrolling=True)
