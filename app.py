@@ -5,11 +5,23 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="🐟", layout="wide")
 
-# LISTAS PREDETERMINADAS PARA RECEPCIÓN
+# ==========================================
+# LISTAS PREDETERMINADAS
+# ==========================================
+# Listas de Recepción (Módulo 1)
 PROVEEDORES_LISTA = ["Chester Espinoza", "Distribuidora del Mar", "Cooperativa Masachapa", "Darvin Lopez", "➕ Escribir manualmente..."]
 ZONAS_LISTA = ["Masachapa", "Casares", "San Juan del Sur", "Granja interna", "Las Poritas", "➕ Escribir manualmente..."]
 PERSONAL_LISTA = ["W. Solis / E. Palacios", "Maikelyn Zelaya", "D. Fonseca / M. Morales", "Alice Mendoza", "➕ Escribir manualmente..."]
 ESPECIES_LISTA = ["Macuá 1-2", "Macuá 2-4", "Macuá 4-6", "C/Amarilla 2-4", "C/Amarilla 4-6", "Dientón 1-3", "Dientón 3-5", "Guacamayo 1-3", "➕ Escribir manualmente..."]
+
+# --- [NUEVO] Lista de Sugerencias para Trazabilidad (Módulo 2) ---
+# Modifica esta lista con los valores que me proporcionarás después
+PRODUCTOS_TRAZABILIDAD_LISTA = [
+    "Filete de Tilapia Fresh 2-4 oz", 
+    "Filete de Tilapia Fresh 4-6 oz", 
+    "Macuá Entero Eviscerado", 
+    "➕ Escribir manualmente..."
+]
 
 # --- BASE DE DATOS EN MEMORIA ---
 if 'historial_recepciones' not in st.session_state:
@@ -23,7 +35,7 @@ if 'hora_inicio' not in st.session_state:
 if 'hora_fin' not in st.session_state:
     st.session_state.hora_fin = ""
 
-# --- NUEVA BASE DE DATOS PARA TRAZABILIDAD ---
+# --- BASE DE DATOS PARA TRAZABILIDAD ---
 if 'filas_trazabilidad' not in st.session_state:
     st.session_state.filas_trazabilidad = []
 if 'traz_hora_inicio' not in st.session_state:
@@ -278,10 +290,10 @@ else:
         with c1:
             traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
         with c2:
-            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value=st.session_state.traz_hora_inicio, placeholder="ej: 06:00 AM")
-            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso:", value=st.session_state.traz_hora_fin, placeholder="ej: 03:30 PM")
+            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso[cite: 2]:", value=st.session_state.traz_hora_inicio, placeholder="ej: 06:00 AM")
+            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso[cite: 2]:", value=st.session_state.traz_hora_fin, placeholder="ej: 03:30 PM")
         with c3:
-            st.session_state.traz_elaborado = st.text_input("Elaborado Por (Nombre Completo):", value=st.session_state.traz_elaborado)
+            st.session_state.traz_elaborado = st.text_input("Elaborado Por[cite: 2]:", value=st.session_state.traz_elaborado)
 
     with tab_traz_registro:
         st.subheader("Ingreso de Datos de Cadena y Rendimiento")
@@ -289,22 +301,26 @@ else:
         with st.form("form_trazabilidad", clear_on_submit=True):
             r1, r2, r3, r4 = st.columns(4)
             with r1:
-                f_almacenamiento = st.date_input("Fecha de Almacenamiento:")
-                n_termo = st.text_input("No. de Termo Origen:")
-                desc_producto = st.text_input("Descripción del Producto:", placeholder="ej: Filete de Tilapia Fresh")
+                f_almacenamiento = st.date_input("Fecha de Almacenamiento[cite: 2]:")
+                n_termo = st.text_input("No. de Termo[cite: 2]:")
+                
+                # --- [NUEVO] Desplegable con Sugerencias de Descripción de Especies y Productos ---
+                prod_sel = st.selectbox("Descripción del Producto[cite: 2]:", PRODUCTOS_TRAZABILIDAD_LISTA)
+                desc_producto = st.text_input("Escriba Producto Manual (si marcó escribir manualmente):") if prod_sel == "➕ Escribir manualmente..." else prod_sel
+                
             with r2:
-                lote_traz = st.text_input("Lote:")
-                tipo_proceso = st.text_input("Fecha y Tipo de Proceso Aplicado:", placeholder="ej: 04/07 - Eviscerado")
-                n_termo_destino = st.text_input("N° de Termo Destino:")
+                lote_traz = st.text_input("Lote[cite: 2]:")
+                tipo_proceso = st.text_input("Fecha y Tipo de Proceso Aplicado[cite: 2]:", placeholder="ej: 04/07 - Eviscerado")
+                n_termo_destino = st.text_input("N° de Termo Destino[cite: 2]:")
             with r3:
-                p_inicial = st.number_input("Peso Inicial (Lbs):", min_value=0.0, step=0.1)
-                p_final = st.number_input("Peso Final (Lbs):", min_value=0.0, step=0.1)
+                p_inicial = st.number_input("Peso Inicial (Lbs)[cite: 2]:", min_value=0.0, step=0.1)
+                p_final = st.number_input("Peso Final (Lbs)[cite: 2]:", min_value=0.0, step=0.1)
             with r4:
-                r_esperado = st.number_input("Rendimiento Esperado (%):", min_value=0.0, max_value=100.0, value=85.0, step=0.1)
-                proceso_destino = st.text_input("Fecha y Proceso Destino:", placeholder="ej: 05/07 - Congelación")
+                r_esperado = st.number_input("Rendimiento Esperado (%)[cite: 2]:", min_value=0.0, max_value=100.0, value=85.0, step=0.1)
+                proceso_destino = st.text_input("Fecha y Proceso Destino[cite: 2]:", placeholder="ej: 05/07 - Congelación")
                 
             if st.form_submit_button("➕ REGISTRAR FILA DE TRAZABILIDAD"):
-                # Cálculo de rendimiento automático en tiempo real
+                # --- [NUEVO] Cálculo de rendimiento automático exacto (Final / Inicial * 100) ---
                 rend_real = (p_final / p_inicial * 100) if p_inicial > 0 else 0.0
                 
                 nueva_fila_traz = {
@@ -336,7 +352,7 @@ else:
         if st.session_state.filas_trazabilidad:
             traz_rows_html = ""
             filas_traz_imp = st.session_state.filas_trazabilidad.copy()
-            while len(filas_traz_imp) < 15: filas_traz_imp.append({}) # Llena hasta 15 filas requeridas
+            while len(filas_traz_imp) < 15: filas_traz_imp.append({}) # Asegura las 15 filas del formato[cite: 2]
             
             for ft in filas_traz_imp:
                 traz_rows_html += f"""
@@ -349,16 +365,17 @@ else:
                     <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Inicial', ''):,.1f}" if ft.get('Peso Inicial') else ''}</td>
                     <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Final', ''):,.1f}" if ft.get('Peso Final') else ''}</td>
                     <td style="border: 1px solid #000;">{ft.get('Termo Destino', '')}</td>
-                    <td style="border: 1px solid #000; color: blue; font-weight: bold;">{ft.get('Rendimiento Real', '')}</td>
-                    <td style="border: 1px solid #000; color: #555;">{ft.get('Rendimiento Esperado', '')}</td>
+                    <td style="border: 1px solid #000; color: black; font-weight: bold;">{ft.get('Rendimiento Real', '')}</td>
+                    <td style="border: 1px solid #000; color: black;">{ft.get('Rendimiento Esperado', '')}</td>
                     <td style="border: 1px solid #000; font-size: 7.5pt;">{ft.get('Proceso Destino', '')}</td>
                 </tr>
                 """
                 
+            # --- [NUEVO] Formato Inferior Idéntico al Documento Compartido ---
             documento_traz_html = f"""
             <html><head><style>
                 @media print {{ button {{ display: none !important; }} body {{ background-color: white; color: black; padding: 0; margin: 0; }} }}
-                .grid-traz {{ display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; border: 1px solid #000; padding: 6px; font-size: 8.5pt; margin-bottom: 8px; }}
+                .grid-traz {{ display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.8fr; border: 1px solid #000; padding: 6px; font-size: 8.5pt; margin-bottom: 8px; }}
             </style></head><body>
                 <div style="text-align: center; margin-bottom: 10px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 4px; cursor: pointer;">🖨️ IMPRIMIR REPORTE DE TRAZABILIDAD OFICIAL</button></div>
                 <div style="font-family: 'Arial', sans-serif; padding: 5px; color: black; background-color: white;">
@@ -367,41 +384,44 @@ else:
                             <td style="border: 2px solid #000; width: 18%; text-align: center;">{LOGO_NICALAPIA_SVG}</td>
                             <td style="border: 2px solid #000; width: 64%; text-align: center; vertical-align: middle;">
                                 <span style="font-size: 11pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
-                                <span style="font-size: 12pt; font-weight: bold; letter-spacing: 0.5px;">FORMATO: SEGUIMIENTO DE TRAZABILIDAD INTERNA</span>
+                                <span style="font-size: 11.5pt; font-weight: bold; letter-spacing: 0.3px;">FORMATO DE CONTROL DE TRAZABILIDAD DE PRODUCTO EN PROCESO</span>
                             </td>
-                            <td style="border: 2px solid #000; width: 18%; font-size: 8pt; font-weight: bold; padding: 6px;">CODIGO: FT-TRAZ-001<br>VERSION: Julio 2026<br>Versión: 1</td>
+                            <td style="border: 2px solid #000; width: 18%; font-size: 8pt; font-weight: bold; padding: 6px;">CODIGO: FT-PROD-03<br>FECHA ULTIMA VERSION:<br>Julio 2026<br>Versión: 1</td>
                         </tr>
                     </table>
                     <div class="grid-traz">
                         <div><b>FECHA:</b> {traz_fecha.strftime('%d/%m/%Y')}</div>
-                        <div><b>HORA INICIO:</b> {st.session_state.traz_hora_inicio}</div>
-                        <div><b>HORA FINAL:</b> {st.session_state.traz_hora_fin}</div>
+                        <div><b>Hora Inicio:</b> {st.session_state.traz_hora_inicio}</div>
+                        <div><b>Hora Final:</b> {st.session_state.traz_hora_fin}</div>
                         <div><b>ELABORADO POR:</b> {st.session_state.traz_elaborado}</div>
                     </div>
                     <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 7.8pt; border: 2px solid #000;">
                         <thead>
-                            <tr style="background-color: #f2f2f2; height: 30px;">
-                                <th style="border: 1px solid #000; width: 9%;">FECHA DE<br>ALMACENAMIENTO</th>
+                            <tr style="background-color: #ffffff; height: 35px;">
+                                <th style="border: 1px solid #000; width: 9%;">FECHA DE<br>Almacenamiento</th>
                                 <th style="border: 1px solid #000; width: 7%;">No. DE<br>TERMO</th>
-                                <th style="border: 1px solid #000; width: 18%;">DESCRIPCION DEL PRODUCTO</th>
-                                <th style="border: 1px solid #000; width: 10%;">LOTE</th>
-                                <th style="border: 1px solid #000; width: 13%;">FECHA Y TIPO DE<br>PROCESO APLICADO</th>
-                                <th style="border: 1px solid #000; width: 7%;">PESO INICIAL<br>(Lbs)</th>
-                                <th style="border: 1px solid #000; width: 7%;">PESO FINAL<br>(Lbs)</th>
+                                <th style="border: 1px solid #000; width: 20%;">DESCRIPCION DEL PRODUCTO</th>
+                                <th style="border: 1px solid #000; width: 9%;">LOTE</th>
+                                <th style="border: 1px solid #000; width: 14%;">FECHA Y TIPO DE<br>PROCESO APLICADO</th>
+                                <th style="border: 1px solid #000; width: 7%;">PESO INICIAL</th>
+                                <th style="border: 1px solid #000; width: 7%;">PESO FINAL</th>
                                 <th style="border: 1px solid #000; width: 7%;">N° DE TERMO<br>DESTINO</th>
-                                <th style="border: 1px solid #000; width: 8%;">RENDIMIENTO<br>REAL</th>
-                                <th style="border: 1px solid #000; width: 8%;">RENDIMIENTO<br>ESPERADO</th>
+                                <th style="border: 1px solid #000; width: 8%;">RENDIMEINTO<br>REAL</th>
+                                <th style="border: 1px solid #000; width: 8%;">REDIMEINTO<br>ESPERADO</th>
                                 <th style="border: 1px solid #000; width: 12%;">FECHA Y PROCESO<br>DESTINO</th>
                             </tr>
                         </thead>
                         <tbody>{traz_rows_html}</tbody>
                     </table>
-                    <div style="margin-top: 10px; font-size: 7.5pt;">
-                        <b>OBSERVACIONES:</b> ____________________________________________________________________________________________________________________________________________________________________<br><br>
-                        <table style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 15px;">
+                    
+                    <!-- PARTE INFERIOR IDENTICA AL FORMATO COMPARTIDO -->
+                    <div style="margin-top: 12px; font-size: 8.5pt; font-family: 'Arial', sans-serif;">
+                        <b>OBSERVACIONES:</b>____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________<br><br><br>
+                        
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 8.5pt;">
                             <tr>
-                                <td style="width: 50%;">___________________________________<br><b>Supervisado por:</b></td>
-                                <td style="width: 50%;">___________________________________<br><b>Verificado por:</b></td>
+                                <td style="width: 50%; border: none;"><b>Supervisado por:</b> ______________________</td>
+                                <td style="width: 50%; border: none; text-align: right;"><b>Verificado por:</b> ________________________</td>
                             </tr>
                         </table>
                     </div>
