@@ -203,8 +203,8 @@ if modulo == "📊 Recepción de Materia Prima":
                     <b>Evaluación Sensorial:</b> B: Bueno, MB: Muy Bueno; E: Excelente; N/A: No Aplica; AC: Acción Correctiva; <b>SABOR:</b> C: caracteristico, NC: No Conforme, MP: materia prima.<br>
                     
                     <div class="obs-lines">
-                        <b>Observaciones:</b> <br> ________________________________________________________________________________________________________________________________________________________________</b>
-                       <br> __________________________________________________________________________________________________________________________________________________________________________________________________</b>
+                        <b>Observaciones:</b> <br>_______________________________________________________________________________________________________________________________________________________________________</b>
+                       <br>___________________________________________________________________________________________________________________________________________________________________________________________________________</b>
 
                     </div>
                     
@@ -284,7 +284,7 @@ else:
         filas_traz_imp = st.session_state.filas_trazabilidad.copy()
         
         # AÑADIDAS 4 FILAS MÁS (De 13 subió a 17 filas fijas)
-        while len(filas_traz_imp) < 19: filas_traz_imp.append({})
+        while len(filas_traz_imp) < 18: filas_traz_imp.append({})
         
         for ft in filas_traz_imp:
             traz_rows_html += f"""
