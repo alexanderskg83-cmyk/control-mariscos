@@ -150,7 +150,7 @@ if modulo == "📊 Recepción de Materia Prima":
                 @page {{ size: letter landscape; margin: 0.15in; }}
             }}
             body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
-            #hoja-oficial {{ background: white; width: 11.1in; height: 7.4in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            #hoja-oficial {{ background: white; width: 11.1in; height: auto; min-height: 7.2in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
             .header-table {{ margin-bottom: 8px; width: 100%; border-collapse: collapse; }}
             .grid-container {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; border: 1px solid #000; padding: 5px; font-size: 8.5pt; margin-bottom: 8px; line-height: 1.5; }}
             table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
@@ -213,8 +213,7 @@ if modulo == "📊 Recepción de Materia Prima":
                         </tr>
                     </table>
                     
-                    <!-- LÍNEA EN VERDE (NUEVA UBICACIÓN POR ENCIMA DEL BLOQUE TÉCNICO) -->
-                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 8px; margin-bottom: 4px;">
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 14px; margin-bottom: 6px;">
                     
                     <div class="custom-recepcion-footer">
                         <b>Límite crítico:</b> Temperatura del producto &le; 4°C;<br>
@@ -305,13 +304,13 @@ else:
                 @page {{ size: letter landscape; margin: 0.15in; }}
             }}
             body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
-            #hoja-trazabilidad {{ background: white; width: 11.1in; height: 7.4in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            #hoja-trazabilidad {{ background: white; width: 11.1in; height: auto; min-height: 5.5in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
             .header-table {{ margin-bottom: 8px; width: 100%; border-collapse: collapse; }}
             .grid-traz {{ display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.8fr; border: 1px solid #000; padding: 5px; font-size: 9pt; margin-bottom: 8px; line-height: 1.4; }}
             table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
             th, td {{ border: 1px solid #000; overflow: hidden; }}
             .obs-title {{ font-size: 8.5pt; font-weight: bold; margin-top: 4px; line-height: 1.4; text-align: justify; width: 100%; word-break: break-all; }}
-            .custom-traz-footer {{ font-size: 7.2pt; line-height: 1.35; font-weight: normal; margin-top: 6px; text-align: justify; }}
+            .custom-traz-footer {{ font-size: 7.2pt; line-height: 1.4; font-weight: normal; margin-top: 10px; text-align: justify; }}
         </style></head><body>
             <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR TRAZABILIDAD (FT-PROD-03)</button></div>
             <div id="hoja-trazabilidad">
@@ -349,20 +348,20 @@ else:
                     <b>OBSERVACIONES:</b> _________________________________________________________________________________________________________________________________________________________________<br>
                     ............................................................................................................................................................................................................................................................................
                     
-                    <table style="border: none; margin-top: 15px; width: 100%;">
+                    <table style="border: none; margin-top: 15px; margin-bottom: 5px; width: 100%;">
                         <tr style="background: none;">
                             <td style="border: none; text-align: left; font-size: 9pt; padding: 0;"><b>Supervisado por:</b> ___________________________</td>
                             <td style="border: none; text-align: right; font-size: 9pt; padding: 0;"><b>Verificado por:</b> ___________________________</td>
                         </tr>
                     </table>
                     
-                    <!-- LÍNEA EN VERDE (NUEVA UBICACIÓN POR ENCIMA DEL BLOQUE TÉCNICO) -->
-                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 8px; margin-bottom: 4px;">
+                    <!-- LÍNEA CON ESPACIADO EXTRA SOLICITADO -->
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 15px; margin-bottom: 10px;">
                     
                     <div class="custom-traz-footer">
                         <b>Frecuencia del monitoreo:</b> Cada vez que se procesen productos en las Áreas de Almacenamiento Materia Prima, Procesos Varios, Fileteo, Empaque Al Vacío, Empaque Congelado.&nbsp;&nbsp;&nbsp;&nbsp;<b>Temperatura:</b> inferior a &le; -4.0°C.<br>
                         <span style="font-weight: bold;">Elaborado el 09/08/2024</span>
-                        <div style="text-align: center; font-weight: bold; font-size: 7pt; margin-top: 4px;">
+                        <div style="text-align: center; font-weight: bold; font-size: 7pt; margin-top: 5px;">
                             Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
                         </div>
                     </div>
