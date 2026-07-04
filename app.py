@@ -113,7 +113,7 @@ if modulo == "📊 Recepción de Materia Prima":
         filas_imprimir = st.session_state.filas_actuales.copy()
         
         # AÑADIDAS 4 FILAS MÁS (De 11 subió a 15 filas fijas)
-        while len(filas_imprimir) < 15: filas_imprimir.append({})
+        while len(filas_imprimir) < 14: filas_imprimir.append({})
 
         for f in filas_imprimir:
             suma_fila = 0.0
@@ -284,7 +284,7 @@ else:
         filas_traz_imp = st.session_state.filas_trazabilidad.copy()
         
         # AÑADIDAS 4 FILAS MÁS (De 13 subió a 17 filas fijas)
-        while len(filas_traz_imp) < 17: filas_traz_imp.append({})
+        while len(filas_traz_imp) < 19: filas_traz_imp.append({})
         
         for ft in filas_traz_imp:
             traz_rows_html += f"""
@@ -359,7 +359,7 @@ else:
                         <tr style="background: none;">
                             <td style="border: none; text-align: left; font-size: 9pt; padding: 0;"><b>Supervisado por:</b> ___________________________</td>
                             <td style="border: none; text-align: right; font-size: 9pt; padding: 0;"><b>Verificado por:</b> ___________________________</td>
-                            
+
                         </tr>
                     </table>
                     
