@@ -211,8 +211,8 @@ if modulo == "📊 Recepción de Materia Prima":
                 txt_suma_fila = f"{suma_fila:,.1f}" if f and suma_fila > 0 else ""
                 html_rows += f"""
                 <tr style="height: 25px;">
-                    <td style="border: 1px solid #000; text-align: left; padding-left: 5px; font-weight: bold;">{f.get('Especie/Talla', '')}</td>
-                    <td style="border: 1px solid #000; font-size: 7.5pt;">{f.get('Lote', '')}</td>
+                    <td style="border: 1px solid #000; text-align: left; padding-left: 5px; font-weight: bold; overflow: hidden; white-space: nowrap;">{f.get('Especie/Talla', '')}</td>
+                    <td style="border: 1px solid #000; font-size: 7.5pt; overflow: hidden; white-space: nowrap;">{f.get('Lote', '')}</td>
                     <td style="border: 1px solid #000;">{f.get('Olor', '')}</td>
                     <td style="border: 1px solid #000;">{f.get('Color', '')}</td>
                     <td style="border: 1px solid #000;">{f.get('Textura', '')}</td>
@@ -232,44 +232,77 @@ if modulo == "📊 Recepción de Materia Prima":
 
             documento_imprimible = f"""
             <html><head><style>
-                @media print {{ button {{ display: none !important; }} body {{ background-color: white; color: black; padding: 0; margin: 0; }} }}
+                @media print {{ 
+                    button {{ display: none !important; }} 
+                    body {{ background-color: white; color: black; padding: 0; margin: 0; }} 
+                    @page {{ size: letter landscape; margin: 0.4in; }}
+                }}
                 .grid-container {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; border: 1px solid #000; padding: 8px; font-size: 8.5pt; margin-bottom: 10px;}}
                 .grid-cell {{ line-height: 1.6; }}
+                table {{ table-layout: fixed; width: 100%; border-collapse: collapse; }}
             </style></head><body>
                 <div style="text-align: center; margin-bottom: 10px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 4px; cursor: pointer;">🖨️ IMPRIMIR FORMATO OFICIAL FT-HACCP-005</button></div>
-                <div id="hoja-oficial" style="font-family: 'Arial', sans-serif; padding: 5px; font-size: 8.5pt; color: black; background-color: white;">
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                <div id="hoja-oficial" style="font-family: 'Arial', sans-serif; padding: 5px; font-size: 8.5pt; color: black; background-color: white; max-width: 1000px; margin: 0 auto;">
+                    <table style="margin-bottom: 8px;">
                         <tr>
-                            <td style="border: 2px solid #000; width: 18%; text-align: center;">{LOGO_NICALAPIA_SVG}</td>
-                            <td style="border: 2px solid #000; width: 64%; text-align: center; vertical-align: middle;">
-                                <span style="font-size: 10.5pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
-                                <span style="font-size: 11.5pt; font-weight: bold;">FORMATO: CLASIFICACION Y RECEPCION DE MATERIA PRIMA</span>
+                            <td style="border: 2px solid #000; width: 15%; text-align: center;">{LOGO_NICALAPIA_SVG}</td>
+                            <td style="border: 2px solid #000; width: 65%; text-align: center; vertical-align: middle;">
+                                <span style="font-size: 11pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
+                                <span style="font-size: 12pt; font-weight: bold;">FORMATO: CLASIFICACION Y RECEPCION DE MATERIA PRIMA</span>
                             </td>
-                            <td style="border: 2px solid #000; width: 18%; font-size: 8pt; font-weight: bold; padding: 6px; line-height: 1.4;">CODIGO: FT-HACCP-005<br>VERSION: Mayo 2026<br>Versión: 1</td>
+                            <td style="border: 2px solid #000; width: 20%; font-size: 8pt; font-weight: bold; padding: 6px; line-height: 1.4;">CODIGO: FT-HACCP-005<br>FECHA ULTIMA VERSION:<br>Mayo 2026<br>Versión: 1</td>
                         </tr>
                     </table>
                     <div class="grid-container">
-                        <div class="grid-cell"><b>FECHA/HORA:</b> {fecha_hoy}<br><b>GRANJA:</b> {granja}<br><b>PROVEEDOR:</b> {proveedor}</div>
-                        <div class="grid-cell"><b>ZONA DE PESCA:</b> {zona}<br><b>CARTA GARANTIA:</b> {carta_si} &nbsp;&nbsp; {carta_no}<br><b>HISTAMINICO:</b> {hist_si} &nbsp;&nbsp; {hist_no} &nbsp;&nbsp; {hist_na}</div>
-                        <div class="grid-cell"><b>HORA INICIO:</b> {st.session_state.hora_inicio}<br><b>HORA FINAL:</b> {st.session_state.hora_fin}<br><b>PESADOR:</b> {recibidor}<br><b>ELABORADO:</b> {elaborado}</div>
+                        <div class="grid-cell"><b>FECHA/HORA DE RECEPCIÓN:</b> {fecha_hoy}<br><b>NOMBRE DE LA GRANJA:</b> {granja}<br><b>PROVEEDOR:</b> {proveedor}</div>
+                        <div class="grid-cell"><b>ZONA DE PESCA:</b> {zona}<br><b>CARTA DE GARANTÍA:</b> {carta_si} &nbsp;&nbsp; {carta_no}<br><b>PRODUCTO HISTAMÍNICO:</b> {hist_si} &nbsp;&nbsp; {hist_no} &nbsp;&nbsp; {hist_na}</div>
+                        <div class="grid-cell"><b>HORA INICIO:</b> {st.session_state.hora_inicio}<br><b>HORA FINAL:</b> {st.session_state.hora_fin}<br><b>RECIBIDOR/PESADOR:</b> {recibidor}<br><b>ELABORADO POR:</b> {elaborado}</div>
                     </div>
-                    <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8pt; border: 2px solid #000;">
+                    <table style="text-align: center; font-size: 8pt; border: 2px solid #000;">
+                        <colgroup>
+                            <col style="width: 14%;">
+                            <col style="width: 11%;">
+                            <col style="width: 4.5%;">
+                            <col style="width: 4.5%;">
+                            <col style="width: 4.5%;">
+                            <col style="width: 4.5%;">
+                            <col style="width: 5%;">
+                            <col style="width: 4%;">
+                            {"".join(['<col style="width: 5%;">' for i in range(1,9)])}
+                            <col style="width: 8%;">
+                        </colgroup>
                         <thead>
                             <tr style="background-color: #f2f2f2; height: 20px;">
-                                <th rowspan="2" style="border: 1px solid #000; width: 15%;">ESPECIE/TALLA</th><th rowspan="2" style="border: 1px solid #000; width: 12%;">LOTE</th><th colspan="4" style="border: 1px solid #000;">EVALUACION SENSORIAL</th><th rowspan="2" style="border: 1px solid #000; width: 5%;">No<br>TERMOS</th><th rowspan="2" style="border: 1px solid #000; width: 4%;">ºC</th><th colspan="8" style="border: 1px solid #000;">PESO (Lbs)</th><th rowspan="2" style="border: 1px solid #000; width: 8%;">TOTAL</th>
+                                <th rowspan="2" style="border: 1px solid #000;">ESPECIE/TALLA</th>
+                                <th rowspan="2" style="border: 1px solid #000;">LOTE</th>
+                                <th colspan="4" style="border: 1px solid #000;">EVALUACION SENSORIAL (B; MB; E; N/A)</th>
+                                <th rowspan="2" style="border: 1px solid #000;">No<br>TERMOS</th>
+                                <th rowspan="2" style="border: 1px solid #000;">ºC</th>
+                                <th colspan="8" style="border: 1px solid #000;">PESO</th>
+                                <th rowspan="2" style="border: 1px solid #000;">TOTAL</th>
                             </tr>
                             <tr style="background-color: #f2f2f2; height: 20px;">
-                                <th style="border: 1px solid #000; font-size: 7pt;">OLOR</th><th style="border: 1px solid #000; font-size: 7pt;">COLOR</th><th style="border: 1px solid #000; font-size: 7pt;">TEXRURA</th><th style="border: 1px solid #000; font-size: 7pt;">SABOR</th>
-                                {"".join([f'<th style="border: 1px solid #000; width: 4.5%;">{i}</th>' for i in range(1,9)])}
+                                <th style="border: 1px solid #000; font-size: 6.5pt;">OLOR</th>
+                                <th style="border: 1px solid #000; font-size: 6.5pt;">COLOR</th>
+                                <th style="border: 1px solid #000; font-size: 6.5pt;">TEXRURA</th>
+                                <th style="border: 1px solid #000; font-size: 6.5pt;">SABOR</th>
+                                {"".join([f'<th style="border: 1px solid #000; font-size: 7.5pt;">{i}</th>' for i in range(1,9)])}
                             </tr>
                         </thead>
                         <tbody>{html_rows}
                             <tr style="height: 25px; background-color: #f2f2f2; font-weight: bold;"><td colspan="16" style="border: 1px solid #000; text-align: right; padding-right: 15px;">TOTAL:</td><td style="border: 1px solid #000; font-size: 9pt;">{gran_total_libras:,.1f}</td></tr>
                         </tbody>
                     </table>
-                    <div style="margin-top: 8px; font-size: 7.2pt; line-height: 1.35; text-align: justify;">
-                        <b>Evaluación Sensorial:</b> B: Bueno, MB: Muy Bueno; E: Excelente; N/A: No Aplica; AC: Acción Correctiva; <b>SABOR:</b> C: caracteristico, NC: No Conforme, MP: materia prima.<br><b>Observaciones:</b> ____________________________________________________________________________________________________________________<br>
-                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; text-align: center; font-size: 7.5pt;"><tr><td style="padding-top: 20px;">___________________________<br><b>ENTREGADO POR:</b></td><td style="padding-top: 20px;">___________________________<br><b>SUPERVISADO POR:</b></td><td style="padding-top: 20px;">___________________________<br><b>VERIFICADO POR:</b></td></tr></table>
+                    <div style="margin-top: 8px; font-size: 7.2pt; line-height: 1.4; text-align: justify;">
+                        <b>Evaluación Sensorial:</b> B: Bueno, MB: Muy Bueno; E: Excelente; N/A: No Aplica; AC: Acción Correctiva; <b>SABOR:</b> C: caracteristico, NC: No Conforme, MP: materia prima.<br>
+                        <b>Limite crítico:</b> Temperatura del producto &le; 4.4°C; <b>Frecuencia del monitoreo:</b> En cada recepción de materia prima, por cada 2 cajillas pesadas se verifica la temperatura. Cada vez que se recibe MP se hace la evaluación sensorial a cada unidad recibida, si no cumple con los parámetros sensoriales el producto se rechaza.<br>
+                        <b>Observaciones:</b> ____________________________________________________________________________________________________________________<br>
+                        <table style="margin-top: 10px; text-align: center; font-size: 7.5pt;"><tr><td style="padding-top: 15px;">___________________________<br><b>ENTREGADO POR:</b></td><td style="padding-top: 15px;">___________________________<br><b>SUPERVISADO POR:</b></td><td style="padding-top: 15px;">___________________________<br><b>VERIFICADO POR:</b></td></tr></table>
+                        <hr style="border: 0; border-top: 1px solid #ccc; margin-top: 12px; margin-bottom: 4px;">
+                        <div style="text-align: center; font-size: 6.8pt; color: #444;">
+                            Modificado el 16/12/2024 // Modificado 19/03/2026 // Modificado 14/05/2026<br>
+                            <b>Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.</b>
+                        </div>
                     </div>
                 </div></body></html>
             """
@@ -289,8 +322,8 @@ else:
         with c1:
             traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
         with c2:
-            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value=st.session_state.traz_hora_inicio, placeholder="ej: 06:00 AM")
-            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso:", value=st.session_state.traz_hora_fin, placeholder="ej: 03:30 PM")
+            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value=st.session_state.traz_hora_inicio, placeholder="ej: 05:00 PM")
+            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso:", value=st.session_state.traz_hora_fin, placeholder="ej: 08:20 PM")
         with c3:
             st.session_state.traz_elaborado = st.text_input("Elaborado Por:", value=st.session_state.traz_elaborado)
 
@@ -316,7 +349,6 @@ else:
                 proceso_destino = st.text_input("Fecha y Proceso Destino:", placeholder="ej: 05/07 - Congelación")
                 
             if st.form_submit_button("➕ REGISTRAR FILA DE TRAZABILIDAD"):
-                # Cálculo automático del rendimiento
                 rend_real = (p_final / p_inicial * 100) if p_inicial > 0 else 0.0
                 
                 nueva_fila_traz = {
@@ -354,32 +386,37 @@ else:
                 <tr style="height: 25px;">
                     <td style="border: 1px solid #000; font-size: 8pt;">{ft.get('Fecha Almacenamiento', '')}</td>
                     <td style="border: 1px solid #000;">{ft.get('No. Termo', '')}</td>
-                    <td style="border: 1px solid #000; text-align: left; padding-left: 4px;">{ft.get('Descripcion', '')}</td>
+                    <td style="border: 1px solid #000; text-align: left; padding-left: 4px; overflow: hidden; white-space: nowrap;">{ft.get('Descripcion', '')}</td>
                     <td style="border: 1px solid #000;">{ft.get('Lote', '')}</td>
                     <td style="border: 1px solid #000; font-size: 7.5pt;">{ft.get('Proceso Aplicado', '')}</td>
                     <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Inicial', ''):,.1f}" if ft.get('Peso Inicial') else ''}</td>
                     <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Final', ''):,.1f}" if ft.get('Peso Final') else ''}</td>
                     <td style="border: 1px solid #000;">{ft.get('Termo Destino', '')}</td>
-                    <td style="border: 1px solid #000; color: black; font-weight: bold;" colspan="2">{ft.get('Rendimiento Real', '')}</td>
+                    <td style="border: 1px solid #000; color: black; font-weight: bold;">{ft.get('Rendimiento Real', '')}</td>
                     <td style="border: 1px solid #000; font-size: 7.5pt;">{ft.get('Proceso Destino', '')}</td>
                 </tr>
                 """
                 
             documento_traz_html = f"""
             <html><head><style>
-                @media print {{ button {{ display: none !important; }} body {{ background-color: white; color: black; padding: 0; margin: 0; }} }}
+                @media print {{ 
+                    button {{ display: none !important; }} 
+                    body {{ background-color: white; color: black; padding: 0; margin: 0; }} 
+                    @page {{ size: letter landscape; margin: 0.4in; }}
+                }}
                 .grid-traz {{ display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.8fr; border: 1px solid #000; padding: 6px; font-size: 8.5pt; margin-bottom: 8px; }}
+                table {{ table-layout: fixed; width: 100%; border-collapse: collapse; }}
             </style></head><body>
                 <div style="text-align: center; margin-bottom: 10px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 4px; cursor: pointer;">🖨️ IMPRIMIR REPORTE DE TRAZABILIDAD OFICIAL</button></div>
-                <div style="font-family: 'Arial', sans-serif; padding: 5px; color: black; background-color: white;">
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                <div style="font-family: 'Arial', sans-serif; padding: 5px; color: black; background-color: white; max-width: 1000px; margin: 0 auto;">
+                    <table style="margin-bottom: 8px;">
                         <tr>
-                            <td style="border: 2px solid #000; width: 18%; text-align: center;">{LOGO_NICALAPIA_SVG}</td>
-                            <td style="border: 2px solid #000; width: 64%; text-align: center; vertical-align: middle;">
+                            <td style="border: 2px solid #000; width: 15%; text-align: center;">{LOGO_NICALAPIA_SVG}</td>
+                            <td style="border: 2px solid #000; width: 65%; text-align: center; vertical-align: middle;">
                                 <span style="font-size: 11pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
-                                <span style="font-size: 11.5pt; font-weight: bold; letter-spacing: 0.3px;">FORMATO DE CONTROL DE TRAZABILIDAD DE PRODUCTO EN PROCESO</span>
+                                <span style="font-size: 12pt; font-weight: bold; letter-spacing: 0.3px;">FORMATO DE CONTROL DE TRAZABILIDAD DE PRODUCTO EN PROCESO</span>
                             </td>
-                            <td style="border: 2px solid #000; width: 18%; font-size: 8pt; font-weight: bold; padding: 6px;">CODIGO: FT-PROD-03<br>FECHA ULTIMA VERSION:<br>Julio 2026<br>Versión: 1</td>
+                            <td style="border: 2px solid #000; width: 20%; font-size: 8pt; font-weight: bold; padding: 6px; line-height: 1.4;">CODIGO: FT-PROD-03<br>FECHA ULTIMA VERSION:<br>Julio 2026<br>Versión: 1</td>
                         </tr>
                     </table>
                     <div class="grid-traz">
@@ -388,33 +425,44 @@ else:
                         <div><b>Hora Final:</b> {st.session_state.traz_hora_fin}</div>
                         <div><b>ELABORADO POR:</b> {st.session_state.traz_elaborado}</div>
                     </div>
-                    <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 7.8pt; border: 2px solid #000;">
+                    <table style="text-align: center; font-size: 7.8pt; border: 2px solid #000;">
+                        <colgroup>
+                            <col style="width: 10%;">
+                            <col style="width: 8%;">
+                            <col style="width: 22%;">
+                            <col style="width: 9%;">
+                            <col style="width: 14%;">
+                            <col style="width: 7%;">
+                            <col style="width: 7%;">
+                            <col style="width: 8%;">
+                            <col style="width: 11%;">
+                            <col style="width: 14%;">
+                        </colgroup>
                         <thead>
-                            <tr style="background-color: #ffffff; height: 35px;">
-                                <th style="border: 1px solid #000; width: 9%;">FECHA DE<br>Almacenamiento</th>
-                                <th style="border: 1px solid #000; width: 7%;">No. DE<br>TERMO</th>
-                                <th style="border: 1px solid #000; width: 22%;">DESCRIPCION DEL PRODUCTO</th>
-                                <th style="border: 1px solid #000; width: 9%;">LOTE</th>
-                                <th style="border: 1px solid #000; width: 14%;">FECHA Y TIPO DE<br>PROCESO APLICADO</th>
-                                <th style="border: 1px solid #000; width: 7%;">PESO INICIAL</th>
-                                <th style="border: 1px solid #000; width: 7%;">PESO FINAL</th>
-                                <th style="border: 1px solid #000; width: 7%;">N° DE TERMO<br>DESTINO</th>
-                                <th style="border: 1px solid #000; width: 10%;" colspan="2">RENDIMIENTO AUTOMÁTICO</th>
-                                <th style="border: 1px solid #000; width: 12%;">FECHA Y PROCESO<br>DESTINO</th>
+                            <tr style="background-color: #f2f2f2; height: 35px;">
+                                <th style="border: 1px solid #000;">FECHA DE<br>Almacenamiento</th>
+                                <th style="border: 1px solid #000;">No. DE<br>TERMO</th>
+                                <th style="border: 1px solid #000;">DESCRIPCION DEL PRODUCTO</th>
+                                <th style="border: 1px solid #000;">LOTE</th>
+                                <th style="border: 1px solid #000;">FECHA Y TIPO DE<br>PROCESO APLICADO</th>
+                                <th style="border: 1px solid #000;">PESO INICIAL</th>
+                                <th style="border: 1px solid #000;">PESO FINAL</th>
+                                <th style="border: 1px solid #000;">N° DE TERMO<br>DESTINO</th>
+                                <th style="border: 1px solid #000;">RENDIMIENTO AUTOMÁTICO</th>
+                                <th style="border: 1px solid #000;">FECHA Y PROCESO<br>DESTINO</th>
                             </tr>
                         </thead>
                         <tbody>{traz_rows_html}</tbody>
                     </table>
                     
                     <div style="margin-top: 15px; font-size: 8.5pt; font-family: 'Arial', sans-serif;">
-                        <b>OBSERVACIONES:</b>____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________<br><br><br>
+                        <b>OBSERVACIONES:</b>_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________<br><br>
                         
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 8.5pt;">
-                            <tr>
-                                <td style="width: 50%; border: none;"><b>Supervisado por:</b> ______________________</td>
-                                <td style="width: 50%; border: none; text-align: right;"><b>Verificado por:</b> ________________________</td>
-                            </tr>
-                        </table>
+                        <table style="margin-top: 10px; text-align: center; font-size: 7.5pt;"><tr><td style="padding-top: 15px; text-align: left;"><b>Supervisado por:</b> ___________________________</td><td style="padding-top: 15px; text-align: right;"><b>Verificado por:</b> ___________________________</td></tr></table>
+                        <hr style="border: 0; border-top: 1px solid #ccc; margin-top: 15px; margin-bottom: 4px;">
+                        <div style="text-align: center; font-size: 6.8pt; color: #444;">
+                            <b>Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.</b>
+                        </div>
                     </div>
                 </div></body></html>
             """
