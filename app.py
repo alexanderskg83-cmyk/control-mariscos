@@ -129,7 +129,7 @@ if modulo == "📊 Recepción de Materia Prima":
                 <td style="border: 1px solid #000;">{f.get('Lote', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Olor', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Color', '')}</td>
-                <td style="border: 1px solid #000;">{f.get('Textura', '')} </td>
+                <td style="border: 1px solid #000;">{f.get('Textura ', '')}   </td>
                 <td style="border: 1px solid #000;">{f.get('Sabor', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Nº Termos', '')}</td>
                 <td style="border: 1px solid #000; font-weight: bold;">{f.get('ºC', '')}</td>
