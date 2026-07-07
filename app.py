@@ -8,15 +8,18 @@ st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="�
 # ==========================================
 # LISTAS PREDETERMINADAS
 # ==========================================
-PROVEEDORES_LISTA = ["Chester Espinoza", "Distribuidora del Mar", "Cooperativa Masachapa", "Darvin Lopez", "➕ Escribir manualmente..."]
-ZONAS_LISTA = ["Masachapa", "Casares", "San Juan del Sur", "Granja interna", "Las Poritas", "➕ Escribir manualmente..."]
-PERSONAL_LISTA = ["W. Solis / E. Palacios", "Maikelyn Zelaya", "D. Fonseca / M. Morales", "Alice Mendoza", "➕ Escribir manualmente..."]
-ESPECIES_LISTA = ["Macuá 1-2", "Macuá 2-4", "Macuá 4-6", "C/Amarilla 2-4", "C/Amarilla 4-6", "Dientón 1-3", "Dientón 3-5", "Guacamayo 1-3", "➕ Escribir manualmente..."]
+PROVEEDORES_LISTA = ["Chester Espinoza", "Alba Osava", "Omar Mercado", "Darvin Lopez","Rafael Baltodano", "➕ Escribir manualmente..."]
+ZONAS_LISTA = ["Masachapa", "Casares", "San Juan del Sur", "Las peñitas", "Acopio Blufields", "➕ Escribir manualmente..."]
+PERSONAL_LISTA = ["Wilbert Solis", "Maikelyn Zelaya", "Donald Fonseca", "Alice Mendoza", "Yilbert Solis","➕ Escribir manualmente..."]
+ESPECIES_LISTA = ["Mancha 1-2", "Mancha 2-4", "Mancha 4-6", "Cola Amarilla 2-4", "Cola Amarilla 4-6", "Dientón 1-3", "Dientón 3-5", "Guacamayo 1-3", "➕ Escribir manualmente..."]
 
 PRODUCTOS_TRAZABILIDAD_LISTA = [
-    "Filete de Tilapia Fresh 2-4 oz", 
-    "Filete de Tilapia Fresh 4-6 oz", 
-    "Macuá Entero Eviscerado", 
+    "Filete de Dorado sin Piel", 
+    "Filete de Robalo Sin piel", 
+    "Minuta de yellow Tail",
+    "Minuta de Silk",
+    "Minuta de Rucco",
+    "Lonjas de Atun"
     "➕ Escribir manualmente..."
 ]
 
