@@ -2,8 +2,59 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import streamlit.components.v1 as components
+import gspread
+from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="🐟", layout="wide")
+# ==========================================
+# 🔐 SISTEMA DE LOGIN
+# ==========================================
+def check_password():
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+
+    if not st.session_state.logged_in:
+        st.title("🐟 Nicalapia - Acceso Restringido")
+        with st.form("login_form"):
+            usuario = st.text_input("Usuario")
+            contrasena = st.text_input("Contraseña", type="password")
+            if st.form_submit_button("Entrar"):
+                # Para mayor seguridad, puedes poner esto en st.secrets más adelante
+                if usuario == "admin" and contrasena == "nicalapia123":
+                    st.session_state.logged_in = True
+                    st.rerun()
+                else:
+                    st.error("Usuario o contraseña incorrectos")
+        st.stop() # Detiene el resto del código si no ha iniciado sesión
+
+check_password() # Ejecuta el login antes de cargar la app
+
+# ==========================================
+# ☁️ CONEXIÓN A GOOGLE SHEETS
+# ==========================================
+@st.cache_resource
+def init_connection():
+    # Cargar credenciales desde los secretos de Streamlit
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    return gspread.authorize(creds)
+
+def guardar_en_sheets(nombre_hoja, datos):
+    try:
+        client = init_connection()
+        # Conecta con el ID de tu documento de Google Sheets
+        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
+        if isinstance(datos, list) and len(datos) > 0:
+            df = pd.DataFrame(datos)
+            # Agrega los datos al final del Excel
+            sheet.append_rows(df.values.tolist())
+            return True
+    except Exception as e:
+        st.error(f"Error al conectar con Google Sheets: {e}")
+        return False
+    return False
+
 
 # ==========================================
 # LISTAS PREDETERMINADAS
@@ -106,7 +157,17 @@ if modulo == "📊 Recepción de Materia Prima":
 
         if st.session_state.filas_actuales:
             st.dataframe(pd.DataFrame(st.session_state.filas_actuales).fillna(""), use_container_width=True)
-            if st.button("🗑️ Vaciar Tabla"):
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button("💾 Guardar en Google Sheets (Recepción)", use_container_width=True):
+                    if guardar_en_sheets("Recepcion", st.session_state.filas_actuales):
+                        st.success("¡Datos guardados exitosamente en la nube!")
+                        st.session_state.filas_actuales = [] # Vacia la tabla al guardar
+                        st.rerun()
+            with col_btn2:
+                if st.button("🗑️ Vaciar Tabla", use_container_width=True):
+                    st.session_state.filas_actuales = []
+                    st.rerun()
                 st.session_state.filas_actuales = []
                 st.rerun()
 
@@ -277,7 +338,17 @@ else:
 
         if st.session_state.filas_trazabilidad:
             st.dataframe(pd.DataFrame(st.session_state.filas_trazabilidad), use_container_width=True)
-            if st.button("🗑️ Vaciar Tabla Trazabilidad"):
+            col_btn3, col_btn4 = st.columns(2)
+            with col_btn3:
+                if st.button("💾 Guardar en Google Sheets (Trazabilidad)", use_container_width=True):
+                    if guardar_en_sheets("Trazabilidad", st.session_state.filas_trazabilidad):
+                        st.success("¡Datos guardados exitosamente en la nube!")
+                        st.session_state.filas_trazabilidad = []
+                        st.rerun()
+            with col_btn4:
+                if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
+                    st.session_state.filas_trazabilidad = []
+                    st.rerun()
                 st.session_state.filas_trazabilidad = []
                 st.rerun()
 
