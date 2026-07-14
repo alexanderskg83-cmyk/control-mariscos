@@ -1,10 +1,7 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
-import streamlit.components.v1 as components
 import gspread
 from google.oauth2.service_account import Credentials
-
 st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="🐟", layout="wide")
 # ==========================================
 # 🔐 SISTEMA DE LOGIN
@@ -43,15 +40,16 @@ def init_connection():
 def guardar_en_sheets(nombre_hoja, datos):
     try:
         client = init_connection()
-        # Conecta con el ID de tu documento de Google Sheets
         sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
         if isinstance(datos, list) and len(datos) > 0:
             df = pd.DataFrame(datos)
-            # Agrega los datos al final del Excel
+            # Evita errores convirtiendo valores nulos en celdas vacías
+            df = df.fillna("") 
             sheet.append_rows(df.values.tolist())
             return True
     except Exception as e:
-        st.error(f"Error al conectar con Google Sheets: {e}")
+        # Esto te dirá exactamente en la pantalla qué credencial o ID está fallando
+        st.error(f"🚨 Detalle del error en Google Sheets: {e}")
         return False
     return False
 
@@ -159,17 +157,27 @@ if modulo == "📊 Recepción de Materia Prima":
             st.dataframe(pd.DataFrame(st.session_state.filas_actuales).fillna(""), use_container_width=True)
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
-                if st.button("💾 Guardar en Google Sheets (Recepción)", use_container_width=True):
-                    if guardar_en_sheets("Recepcion", st.session_state.filas_actuales):
-                        st.success("¡Datos guardados exitosamente en la nube!")
-                        st.session_state.filas_actuales = [] # Vacia la tabla al guardar
-                        st.rerun()
+                if st.button("💾 Guardar y Procesar Registro", use_container_width=True):
+                    if not st.session_state.filas_actuales:
+                        st.warning("⚠️ La tabla está vacía. Agrega filas antes de guardar.")
+                    else:
+                        # 🖨️ PASO 1: Grabamos las líneas EN EL ACTO para el formato imprimible
+                        st.session_state.datos_impresion_recepcion = list(st.session_state.filas_actuales)
+                        st.success("📝 ¡Líneas grabadas en el formato imprimible con éxito!")
+                        
+                        # ☁️ PASO 2: Intentamos enviarlo a la nube
+                        st.info("Subiendo copia a Google Sheets...")
+                        if guardar_en_sheets("Recepcion", st.session_state.filas_actuales):
+                            st.success("✨ ¡Respaldado en la nube exitosamente!")
+                            st.session_state.filas_actuales = [] # Solo limpia la pantalla si la nube respondió bien
+                            st.rerun()
+                        else:
+                            st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
+            
             with col_btn2:
                 if st.button("🗑️ Vaciar Tabla", use_container_width=True):
                     st.session_state.filas_actuales = []
                     st.rerun()
-                st.session_state.filas_actuales = []
-                st.rerun()
 
     with tab_impresion:
         gran_total_libras = 0.0
@@ -338,19 +346,29 @@ else:
 
         if st.session_state.filas_trazabilidad:
             st.dataframe(pd.DataFrame(st.session_state.filas_trazabilidad), use_container_width=True)
-            col_btn3, col_btn4 = st.columns(2)
+           col_btn3, col_btn4 = st.columns(2)
             with col_btn3:
-                if st.button("💾 Guardar en Google Sheets (Trazabilidad)", use_container_width=True):
-                    if guardar_en_sheets("Trazabilidad", st.session_state.filas_trazabilidad):
-                        st.success("¡Datos guardados exitosamente en la nube!")
-                        st.session_state.filas_trazabilidad = []
-                        st.rerun()
+                if st.button("💾 Guardar y Procesar Trazabilidad", use_container_width=True):
+                    if not st.session_state.filas_trazabilidad:
+                        st.warning("⚠️ La tabla de trazabilidad está vacía.")
+                    else:
+                        # 🖨️ PASO 1: Grabamos las líneas EN EL ACTO para el formato imprimible
+                        st.session_state.datos_impresion_trazabilidad = list(st.session_state.filas_trazabilidad)
+                        st.success("📝 ¡Líneas de trazabilidad listas para imprimir!")
+                        
+                        # ☁️ PASO 2: Intentamos enviarlo a la nube
+                        st.info("Subiendo copia a Google Sheets...")
+                        if guardar_en_sheets("Trazabilidad", st.session_state.filas_trazabilidad):
+                            st.success("✨ ¡Respaldado en la nube exitosamente!")
+                            st.session_state.filas_trazabilidad = [] # Solo limpia la pantalla si la nube respondió bien
+                            st.rerun()
+                        else:
+                            st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
+            
             with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
                     st.rerun()
-                st.session_state.filas_trazabilidad = []
-                st.rerun()
 
     with tab_traz_impresion:
         traz_rows_html = ""
