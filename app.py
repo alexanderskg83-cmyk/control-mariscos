@@ -346,8 +346,8 @@ else:
 
         if st.session_state.filas_trazabilidad:
             st.dataframe(pd.DataFrame(st.session_state.filas_trazabilidad), use_container_width=True)
-           col_btn3, col_btn4 = st.columns(2)
-            with col_btn3:
+            col_btn3, col_btn4 = st.columns(2)
+        with col_btn3:
                 if st.button("💾 Guardar y Procesar Trazabilidad", use_container_width=True):
                     if not st.session_state.filas_trazabilidad:
                         st.warning("⚠️ La tabla de trazabilidad está vacía.")
@@ -365,7 +365,7 @@ else:
                         else:
                             st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
             
-            with col_btn4:
+        with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
                     st.rerun()
