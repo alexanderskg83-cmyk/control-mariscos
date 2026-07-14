@@ -19,7 +19,7 @@ PRODUCTOS_TRAZABILIDAD_LISTA = [
     "Minuta de yellow Tail",
     "Minuta de Silk",
     "Minuta de Rucco",
-    "Lonjas de Atun"
+    "Lonjas de Atun", # Coma agregada aquí
     "➕ Escribir manualmente..."
 ]
 
@@ -115,7 +115,6 @@ if modulo == "📊 Recepción de Materia Prima":
         html_rows = ""
         filas_imprimir = st.session_state.filas_actuales.copy()
         
-        # AÑADIDAS 4 FILAS MÁS (De 11 subió a 15 filas fijas)
         while len(filas_imprimir) < 14: filas_imprimir.append({})
 
         for f in filas_imprimir:
@@ -286,7 +285,6 @@ else:
         traz_rows_html = ""
         filas_traz_imp = st.session_state.filas_trazabilidad.copy()
         
-        # AÑADIDAS 4 FILAS MÁS (De 13 subió a 17 filas fijas)
         while len(filas_traz_imp) < 18: filas_traz_imp.append({})
         
         for ft in filas_traz_imp:
