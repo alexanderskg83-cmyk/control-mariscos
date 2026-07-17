@@ -5,10 +5,6 @@ from datetime import datetime
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
-import io
-from fpdf import FPDF
 
 st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="🐟", layout="wide")
 
@@ -25,103 +21,47 @@ def check_password():
             usuario = st.text_input("Usuario")
             contrasena = st.text_input("Contraseña", type="password")
             if st.form_submit_button("Entrar"):
+                # Para mayor seguridad, puedes poner esto en st.secrets más adelante
                 if usuario == "admin" and contrasena == "nicalapia123":
                     st.session_state.logged_in = True
                     st.rerun()
                 else:
                     st.error("Usuario o contraseña incorrectos")
-        st.stop()
+        st.stop() # Detiene el resto del código si no ha iniciado sesión
 
-check_password()
+check_password() # Ejecuta el login antes de cargar la app
 
 # ==========================================
-# ☁️ CONEXIÓN A GOOGLE SHEETS Y DRIVE
+# ☁️ CONEXIÓN A GOOGLE SHEETS
 # ==========================================
 @st.cache_resource
 def init_connection():
     creds_dict = dict(st.secrets["gcp_service_account"])
-    # Añadidos alcances para Sheets y Drive corporativo
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
+    
+    # 🔧 El truco maestro: Convierte los '\n' de texto en saltos de línea reales
+    if "private_key" in creds_dict:
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+        
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-    return creds
+    return gspread.authorize(creds)
 
 def guardar_en_sheets(nombre_hoja, datos):
     try:
-        creds = init_connection()
-        client = gspread.authorize(creds)
+        client = init_connection()
         sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
         if isinstance(datos, list) and len(datos) > 0:
-            df = pd.DataFrame(datos).fillna("") 
+            df = pd.DataFrame(datos)
+            # Evita errores convirtiendo valores nulos en celdas vacías
+            df = df.fillna("") 
             sheet.append_rows(df.values.tolist())
             return True
     except Exception as e:
-        st.error(f"🚨 Error en Google Sheets: {e}")
+        # Esto te dirá exactamente en la pantalla qué credencial o ID está fallando
+        st.error(f"🚨 Detalle del error en Google Sheets: {e}")
         return False
     return False
 
-def subir_pdf_a_drive(nombre_archivo, pdf_bytes):
-    try:
-        creds = init_connection()
-        service = build('drive', 'v3', credentials=creds)
-        folder_id = st.secrets.get("drive_folder_id", "") # Opcional: ID de carpeta compartida en secrets
-        
-        file_metadata = {'name': nombre_archivo, 'mimeType': 'application/pdf'}
-        if folder_id:
-            file_metadata['parents'] = [folder_id]
-            
-        media = MediaIoBaseUpload(io.BytesIO(pdf_bytes), mimetype='application/pdf', resumable=True)
-        file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        return file.get('id')
-    except Exception as e:
-        st.error(f"🚨 Error al subir a Google Drive: {e}")
-        return None
-
-def obtener_historial(nombre_hoja):
-    try:
-        creds = init_connection()
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
-        datos = sheet.get_all_records()
-        return pd.DataFrame(datos)
-    except Exception as e:
-        st.error(f"No se pudo conectar al historial: {e}")
-        return pd.DataFrame()
-
-# ==========================================
-# 📄 GENERADOR DE PDF NATIVO
-# ==========================================
-def generar_pdf_reporte(titulo, encabezado, df_datos):
-    pdf = FPDF(orientation="L", unit="mm", format="letter")
-    pdf.add_page()
-    pdf.set_font("helvetica", "B", 14)
-    pdf.cell(0, 10, f"Nicalapia S.A. - {titulo}", ln=True, align="C")
-    pdf.ln(4)
-    
-    # Renderizar Encabezados
-    pdf.set_font("helvetica", "B", 9)
-    for k, v in encabezado.items():
-        pdf.cell(60, 5, f"{k}: {v}", ln=False)
-    pdf.ln(8)
-    
-    # Tabla de Contenidos
-    pdf.set_font("helvetica", "B", 8)
-    columnas = list(df_datos.columns)
-    col_width = 260 / max(len(columnas), 1)
-    
-    for col in columnas:
-        pdf.cell(col_width, 6, str(col)[:12], border=1, align="C")
-    pdf.ln()
-    
-    pdf.set_font("helvetica", "", 8)
-    for _, row in df_datos.iterrows():
-        for col in columnas:
-            pdf.cell(col_width, 5, str(row[col])[:12], border=1, align="C")
-        pdf.ln()
-        
-    return pdf.output()
 
 # ==========================================
 # LISTAS PREDETERMINADAS
@@ -130,12 +70,24 @@ PROVEEDORES_LISTA = ["Chester Espinoza", "Alba Osava", "Omar Mercado", "Darvin L
 ZONAS_LISTA = ["Masachapa", "Casares", "San Juan del Sur", "Las peñitas", "Acopio Blufields", "➕ Escribir manualmente..."]
 PERSONAL_LISTA = ["Wilbert Solis", "Maikelyn Zelaya", "Donald Fonseca", "Alice Mendoza", "Yilbert Solis","➕ Escribir manualmente..."]
 ESPECIES_LISTA = ["Mancha 1-2", "Mancha 2-4", "Mancha 4-6", "Cola Amarilla 2-4", "Cola Amarilla 4-6", "Dientón 1-3", "Dientón 3-5", "Guacamayo 1-3", "➕ Escribir manualmente..."]
-PRODUCTOS_TRAZABILIDAD_LISTA = ["Filete de Dorado sin Piel", "Filete de Robalo Sin piel", "Minuta de yellow Tail", "Minuta de Silk", "Minuta de Rucco", "Lonjas de Atun", "➕ Escribir manualmente..."]
 
-# Inicialización de Estados
+PRODUCTOS_TRAZABILIDAD_LISTA = [
+    "Filete de Dorado sin Piel", 
+    "Filete de Robalo Sin piel", 
+    "Minuta de yellow Tail",
+    "Minuta de Silk",
+    "Minuta de Rucco",
+    "Lonjas de Atun",
+    "➕ Escribir manualmente..."
+]
+
 if 'filas_actuales' not in st.session_state: st.session_state.filas_actuales = []
+if 'hora_inicio' not in st.session_state: st.session_state.hora_inicio = ""
+if 'hora_fin' not in st.session_state: st.session_state.hora_fin = ""
 if 'filas_trazabilidad' not in st.session_state: st.session_state.filas_trazabilidad = []
-if 'historial_ver' not in st.session_state: st.session_state.historial_ver = None
+if 'traz_hora_inicio' not in st.session_state: st.session_state.traz_hora_inicio = ""
+if 'traz_hora_fin' not in st.session_state: st.session_state.traz_hora_fin = ""
+if 'traz_elaborado' not in st.session_state: st.session_state.traz_elaborado = ""
 
 LOGO_NICALAPIA_SVG = """
 <svg width="85" height="62" viewBox="15 15 90 90" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;">
@@ -161,14 +113,7 @@ with st.sidebar:
 # ==============================================================================
 if modulo == "📊 Recepción de Materia Prima":
     st.title("🐟 Clasificación y Recepción de Materia Prima")
-    
-    # Botón global para crear una nueva recepción limpia
-    if st.button("🆕 Crear Nueva Recepción (Limpiar Todo)", type="primary"):
-        st.session_state.filas_actuales = []
-        st.session_state.historial_ver = None
-        st.rerun()
-
-    tab_datos, tab_registro, tab_impresion, tab_historial = st.tabs(["📋 Encabezado", "⚖️ Pesajes", "🖨️ Vista de Impresión", "🗂️ Historial de Registros"])
+    tab_datos, tab_registro, tab_impresion = st.tabs(["📋 Encabezado", "⚖️ Pesajes", "🖨️ Vista de Impresión"])
 
     with tab_datos:
         col1, col2, col3 = st.columns(3)
@@ -186,8 +131,8 @@ if modulo == "📊 Recepción de Materia Prima":
             carta = st.selectbox("Carta de Garantía:", ["SI", "NO"])
         with col3:
             histaminico = st.selectbox("Producto Histamínico:", ["NO", "SI", "N/A"])
-            hora_inicio = st.text_input("Hora Inicio:", value="08:00 AM")
-            hora_fin = st.text_input("Hora Final:", value="12:00 PM")
+            st.session_state.hora_inicio = st.text_input("Hora Inicio:", value=st.session_state.hora_inicio)
+            st.session_state.hora_fin = st.text_input("Hora Final:", value=st.session_state.hora_fin)
 
     with tab_registro:
         with st.form("registro_especie", clear_on_submit=True):
@@ -218,73 +163,36 @@ if modulo == "📊 Recepción de Materia Prima":
                     st.rerun()
 
         if st.session_state.filas_actuales:
-            st.markdown("### ✏️ Tabla de Pesajes (Puedes editar celdas o corregir pesos directamente aquí abajo):")
-            df_editable = pd.DataFrame(st.session_state.filas_actuales).fillna("")
-            
-            # El data_editor permite guardar cualquier cambio que realice el usuario en vivo
-            df_corregido = st.data_editor(df_editable, use_container_width=True, num_rows="dynamic", key="editor_recep")
-            st.session_state.filas_actuales = df_corregido.to_dict('records')
-            
+            st.dataframe(pd.DataFrame(st.session_state.filas_actuales).fillna(""), use_container_width=True)
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
-                if st.button("💾 Guardar, Procesar y Subir a Drive", use_container_width=True, type="primary"):
-                    # Compilar registros estructurados con metadata completa para el historial
-                    bloque_completo = []
-                    for f in st.session_state.filas_actuales:
-                        meta_fila = {
-                            "Fecha_Registro": datetime.now().strftime("%d/%m/%Y"),
-                            "Proveedor": proveedor, "Zona": zona, "Granja": granja,
-                            "Recibidor": recibidor, "Elaborado": elaborado, "Carta": carta,
-                            "Histaminico": histaminico, "Hora_Inicio": hora_inicio, "Hora_Fin": hora_fin
-                        }
-                        meta_fila.update(f)
-                        bloque_completo.append(meta_fila)
-                    
-                    st.info("Subiendo copia de respaldo a Google Sheets...")
-                    if guardar_en_sheets("Recepcion", bloque_completo):
-                        # Generación automática de PDF y subida a Drive
-                        encab_pdf = {"Proveedor": proveedor, "Fecha": datetime.now().strftime("%d/%m/%y"), "Granja": granja}
-                        pdf_data = generar_pdf_reporte("Clasificación y Recepción", encab_pdf, df_corregido)
-                        
-                        id_drive = subir_pdf_a_drive(f"Recepcion_{proveedor}_{lote}.pdf", pdf_data)
-                        if id_drive:
-                            st.success(f"✨ ¡Procesado con éxito! Guardado en Sheets y PDF subido a Drive (ID: {id_drive})")
-                        else:
-                            st.warning("⚠️ Guardado en Sheets pero falló la subida automática a Drive.")
+                if st.button("💾 Guardar y Procesar Registro", use_container_width=True):
+                    if not st.session_state.filas_actuales:
+                        st.warning("⚠️ La tabla está vacía. Agrega filas antes de guardar.")
                     else:
-                        st.error("No se pudo conectar con la base de datos de la nube.")
+                        # 🖨️ PASO 1: Grabamos las líneas EN EL ACTO para el formato imprimible
+                        st.session_state.datos_impresion_recepcion = list(st.session_state.filas_actuales)
+                        st.success("📝 ¡Líneas grabadas en el formato imprimible con éxito!")
+                        
+                        # ☁️ PASO 2: Intentamos enviarlo a la nube
+                        st.info("Subiendo copia a Google Sheets...")
+                        if guardar_en_sheets("Recepcion", st.session_state.filas_actuales):
+                            st.success("✨ ¡Respaldado en la nube exitosamente!")
+                            st.session_state.filas_actuales = [] # Solo limpia la pantalla si la nube respondió bien
+                            st.rerun()
+                        else:
+                            st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
             
             with col_btn2:
-                if st.button("🗑️ Vaciar Tabla Temporal", use_container_width=True):
+                if st.button("🗑️ Vaciar Tabla", use_container_width=True):
                     st.session_state.filas_actuales = []
                     st.rerun()
 
-    with tab_historial:
-        st.markdown("### 🗂️ Buscador de Recepciones Anteriores")
-        if st.button("🔄 Cargar / Actualizar Historial Completo de la Nube"):
-            st.session_state.df_historial_recep = obtener_historial("Recepcion")
-            
-        if 'df_historial_recep' in st.session_state and not st.session_state.df_historial_recep.empty:
-            df_h = st.session_state.df_historial_recep
-            lotes_disponibles = df_h["Lote"].unique()
-            lote_sel = st.selectbox("Seleccione el Lote Histórico que desea revisar o imprimir:", lotes_disponibles)
-            
-            if lote_sel:
-                filtrado = df_h[df_h["Lote"] == lote_sel]
-                st.dataframe(filtrado, use_container_width=True)
-                if st.button("📖 Cargar este registro en la Vista de Impresión"):
-                    # Extraer filas formateadas para la tabla de visualización
-                    columnas_tabla = ["Especie/Talla", "Lote", "Olor", "Color", "Textura", "Sabor", "Nº Termos", "ºC", "Peso 1", "Peso 2", "Peso 3", "Peso 4", "Peso 5", "Peso 6", "Peso 7", "Peso 8"]
-                    st.session_state.filas_actuales = filtrado[columnas_tabla].to_dict('records')
-                    st.success("¡Cargado! Dirígete a la pestaña 'Vista de Impresión' para ver el formato oficial.")
-        else:
-            st.write("Presiona el botón superior para descargar los datos de Google Sheets.")
-
     with tab_impresion:
-        # Generación del formato HTML Oficial para Impresión
         gran_total_libras = 0.0
         html_rows = ""
         filas_imprimir = st.session_state.filas_actuales.copy()
+        
         while len(filas_imprimir) < 14: filas_imprimir.append({})
 
         for f in filas_imprimir:
@@ -301,7 +209,7 @@ if modulo == "📊 Recepción de Materia Prima":
                 <td style="border: 1px solid #000;">{f.get('Lote', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Olor', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Color', '')}</td>
-                <td style="border: 1px solid #000;">{f.get('Textura', '')}</td>
+                <td style="border: 1px solid #000;">{f.get('Textura', '')} </td>
                 <td style="border: 1px solid #000;">{f.get('Sabor', '')}</td>
                 <td style="border: 1px solid #000;">{f.get('Nº Termos', '')}</td>
                 <td style="border: 1px solid #000; font-weight: bold;">{f.get('ºC', '')}</td>
@@ -318,68 +226,108 @@ if modulo == "📊 Recepción de Materia Prima":
 
         documento_imprimible = f"""
         <html><head><style>
-            @media print {{ button {{ display: none !important; }} }}
-            body {{ font-family: 'Arial', sans-serif; color: black; }}
-            #hoja-oficial {{ width: 11.1in; margin: 0 auto; padding: 6px; border: 1px solid #000; }}
-            table {{ width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
-            th, td {{ border: 1px solid #000; padding: 3px; }}
+            @media print {{ 
+                button {{ display: none !important; }} 
+                body {{ background-color: white; color: black; padding: 0; margin: 0; }} 
+                @page {{ size: letter landscape; margin: 0.15in; }}
+            }}
+            body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
+            #hoja-oficial {{ background: white; width: 11.1in; height: auto; min-height: 7.2in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            .header-table {{ margin-bottom: 8px; width: 100%; border-collapse: collapse; }}
+            .grid-container {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; border: 1px solid #000; padding: 5px; font-size: 8.5pt; margin-bottom: 8px; line-height: 1.5; }}
+            table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
+            th, td {{ border: 1px solid #000; overflow: hidden; }}
+            .footer-section {{ font-size: 7.2pt; line-height: 1.3; text-align: justify; margin-top: 5px; }}
+            .obs-lines {{ margin-top: 3px; font-size: 8.5pt; line-height: 1.4; text-align: justify; width: 100%; word-break: break-all; }}
+            .custom-recepcion-footer {{ font-size: 7.2pt; line-height: 1.4; font-weight: normal; margin-top: 4px; text-align: justify; }}
         </style></head><body>
-            <div style="text-align: center; margin-bottom: 4px;">
-                <button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR / GUARDAR PDF</button>
-            </div>
+            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR RECEPCIÓN (FT-HACCP-005)</button></div>
             <div id="hoja-oficial">
-                <table style="width:100%; margin-bottom:10px;">
-                    <tr>
-                        <td style="width:15%;">{LOGO_NICALAPIA_SVG}</td>
-                        <td style="width:65%; font-size:14pt; font-weight:bold;">Nicaraguan Tilapia (Nicalapia S.A)<br><span style="font-size:11pt;">FORMATO: CLASIFICACION Y RECEPCION DE MATERIA PRIMA</span></td>
-                        <td style="width:20%; text-align:left; font-size:8pt;">CODIGO: FT-HACCP-005<br>VERSION: 1<br>Fecha: Mayo 2026</td>
-                    </tr>
-                </table>
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; border:1px solid #000; padding:5px; font-size:9pt; margin-bottom:10px;">
-                    <div><b>PROVEEDOR:</b> {proveedor}<br><b>GRANJA:</b> {granja}</div>
-                    <div><b>ZONA DE PESCA:</b> {zona}<br><b>CARTA GARANTÍA:</b> {carta_si} {carta_no}</div>
-                    <div><b>HORAS:</b> {hora_inicio} - {hora_fin}<br><b>ELABORÓ:</b> {elaborado}</div>
+                <div>
+                    <table class="header-table">
+                        <tr>
+                            <td style="width: 14%; padding: 1px;">{LOGO_NICALAPIA_SVG}</td>
+                            <td style="width: 64%; vertical-align: middle;">
+                                <span style="font-size: 13.5pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
+                                <span style="font-size: 11.5pt; font-weight: bold;">FORMATO: CLASIFICACION Y RECEPCION DE MATERIA PRIMA</span>
+                            </td>
+                            <td style="width: 22%; font-size: 8.5pt; font-weight: bold; text-align: left; padding-left: 8px; line-height: 1.3; border-left: 2px solid #000;">CODIGO: FT-HACCP-005<br>FECHA ULTIMA VERSION:<br>Mayo 2026<br>Versión: 1</td>
+                        </tr>
+                    </table>
+                    <div class="grid-container">
+                        <div><b>FECHA/HORA DE RECEPCIÓN:</b> {fecha_hoy}<br><b>NOMBRE DE LA GRANJA:</b> {granja}<br><b>PROVEEDOR:</b> {proveedor}</div>
+                        <div><b>ZONA DE PESCA:</b> {zona}<br><b>CARTA DE GARANTÍA:</b> {carta_si} &nbsp;&nbsp; {carta_no}<br><b>PRODUCTO HISTAMÍNICO:</b> {hist_si} &nbsp;&nbsp; {hist_no} &nbsp;&nbsp; {hist_na}</div>
+                        <div><b>HORA INICIO:</b> {st.session_state.hora_inicio}<br><b>HORA FINAL:</b> {st.session_state.hora_fin}<br><b>RECIBIDOR/PESADOR:</b> {recibidor}<br><b>ELABORADO POR:</b> {elaborado}</div>
+                    </div>
+                    <table>
+                        <colgroup>
+                            <col style="width: 15%;"><col style="width: 10%;"><col style="width: 4%;"><col style="width: 4%;"><col style="width: 4%;"><col style="width: 4%;"><col style="width: 5%;"><col style="width: 4%;">
+                            {"".join(['<col style="width: 5%;">' for i in range(1,9)])}<col style="width: 10%;">
+                        </colgroup>
+                        <thead>
+                            <tr style="background-color: #f2f2f2; height: 18px;">
+                                <th rowspan="2">ESPECIE/TALLA</th><th rowspan="2">LOTE</th><th colspan="4">EVALUACION SENSORIAL</th><th rowspan="2">No<br>TERMOS</th><th rowspan="2">ºC</th><th colspan="8">PESO</th><th rowspan="2">TOTAL</th>
+                            </tr>
+                            <tr style="background-color: #f2f2f2; height: 18px;">
+                                <th style="font-size: 7pt;">OLOR</th><th style="font-size: 7pt;">COLOR</th><th style="font-size: 7pt;">TEXRURA</th><th style="font-size: 7pt;">SABOR</th>
+                                {"".join([f'<th style="font-size: 8pt;">{i}</th>' for i in range(1,9)])}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {html_rows}
+                            <tr style="height: 22px; background-color: #f2f2f2; font-weight: bold;"><td colspan="16" style="text-align: right; padding-right: 15px;">TOTAL:</td><td style="font-size: 9.5pt;">{gran_total_libras:,.1f}</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <table>
-                    <thead>
-                        <tr style="background-color:#f2f2f2;">
-                            <th rowspan="2">ESPECIE/TALLA</th><th rowspan="2">LOTE</th><th colspan="4">SENSORIAL</th><th rowspan="2">TERMOS</th><th rowspan="2">ºC</th><th colspan="8">PESOS</th><th rowspan="2">TOTAL</th>
-                        </tr>
-                        <tr style="background-color:#f2f2f2;">
-                            <th>O</th><th>C</th><th>T</th><th>S</th>
-                            {"".join([f'<th>{i}</th>' for i in range(1,9)])}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {html_rows}
-                        <tr style="font-weight:bold; background:#f2f2f2;"><td colspan="16" style="text-align:right;">TOTAL LBS:</td><td>{gran_total_libras:,.1f}</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </body></html>
-        """
-        components.html(documento_imprimible, height=650, scrolling=True)
+                <div class="footer-section">
+                    <b>Evaluación Sensorial:</b> B: Bueno, MB: Muy Bueno; E: Excelente; N/A: No Aplica; AC: Acción Correctiva; <b>SABOR:</b> C: caracteristico, NC: No Conforme, MP: materia prima.<br>
+                    
+                    <div class="obs-lines">
+                        <b>Observaciones:</b> <br>___________________________________________________________________________________________________________________________________________________________________</b>
+                       <br>___________________________________________________________________________________________________________________________________________________________________________________________________________</b>
 
+                    </div>
+                    
+                    <table style="border: none; margin-top: 15px; text-align: center; font-size: 8pt; width: 100%;">
+                        <tr style="background: none;">
+                            <td style="border: none; padding-top: 2px;">___________________________<br><b>ENTREGADO POR:</b></td>
+                            <td style="border: none; padding-top: 2px;">___________________________<br><b>SUPERVISADO POR:</b></td>
+                            <td style="border: none; padding-top: 2px;">___________________________<br><b>VERIFICADO POR:</b></td>
+
+                        </tr>
+                    </table>
+                    
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 14px; margin-bottom: 6px;">
+                    
+                    <div class="custom-recepcion-footer">
+                        <b>Límite crítico:</b> Temperatura del producto &le; 4°C;<br>
+                        <b>Frecuencia del monitoreo:</b> En cada recepción de materia prima, por cada 2 cajillas pesadas se verifica la temperatura, Cada vez que se recibe MP se hace el evaluación sensorial a cada unidad recibida, sino cumple con el con los parámetros sensoriales el producto se rechaza.<br>
+                        <b>Modificado el 16/12/2024//Modificado 19/03/2026//Modificado 14/05/2026</b>
+                        <div style="text-align: center; font-size: 6.8pt; font-weight: bold; margin-top: 4px;">
+                            Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
+                        </div>
+                    </div>
+                </div>
+            </div></body></html>
+        """
+        components.html(documento_imprimible, height=750, scrolling=True)
 
 # ==============================================================================
 # MÓDULO 2: SEGUIMIENTO DE TRAZABILIDAD (FT-PROD-03)
 # ==============================================================================
 else:
     st.title("🔍 Control de Trazabilidad de Producto en Proceso")
-    
-    if st.button("🆕 Crear Nueva Trazabilidad (Limpiar Todo)", type="primary"):
-        st.session_state.filas_trazabilidad = []
-        st.rerun()
-
-    tab_traz_datos, tab_traz_registro, tab_traz_impresion, tab_traz_historial = st.tabs(["📋 Encabezado", "📐 Procesos", "🖨️ Vista de Impresión", "🗂️ Historial"])
+    tab_traz_datos, tab_traz_registro, tab_traz_impresion = st.tabs(["📋 Encabezado", "📐 Procesos", "🖨️ Vista de Impresión"])
     
     with tab_traz_datos:
         c1, c2, c3 = st.columns(3)
-        with c1: traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
+        with c1: 
+            traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
         with c2:
-            traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value="07:00 AM")
-            traz_hora_fin = st.text_input("Hora Final Proceso:", value="05:00 PM")
-        with c3: traz_elaborado = st.text_input("Elaborado Por:", value="Alice Mendoza")
+            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value=st.session_state.traz_hora_inicio)
+            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso:", value=st.session_state.traz_hora_fin)
+        with c3: 
+            st.session_state.traz_elaborado = st.text_input("Elaborado Por:", value=st.session_state.traz_elaborado)
 
     with tab_traz_registro:
         with st.form("form_trazabilidad", clear_on_submit=True):
@@ -391,7 +339,7 @@ else:
                 desc_producto = st.text_input("Escriba Producto Manual:") if prod_sel == "➕ Escribir manualmente..." else prod_sel
             with r2:
                 lote_traz = st.text_input("Lote:")
-                tipo_proceso = st.text_input("Fecha y Tipo de Proceso:")
+                tipo_proceso = st.text_input("Fecha y Tipo de Proceso Aplicado:")
                 n_termo_destino = st.text_input("N° de Termo Destino:")
             with r3:
                 p_inicial = st.number_input("Peso Inicial (Lbs):", min_value=0.0)
@@ -401,119 +349,139 @@ else:
             if st.form_submit_button("➕ REGISTRAR FILA"):
                 rend_real = (p_final / p_inicial * 100) if p_inicial > 0 else 0.0
                 nueva_fila_traz = {
-                    "Fecha Almacenamiento": f_almacenamiento.strftime("%d/%m/%Y"), "No. Termo": n_termo, 
-                    "Descripcion": desc_producto, "Lote": lote_traz, "Proceso Aplicado": tipo_proceso, 
-                    "Peso Inicial": p_inicial, "Peso Final": p_final, "Termo Destino": n_termo_destino, 
-                    "Rendimiento Real": f"{rend_real:.1f}%", "Proceso Destino": proceso_destino
+                    "Fecha Almacenamiento": f_almacenamiento.strftime("%d/%m/%Y"), 
+                    "No. Termo": n_termo, 
+                    "Descripcion": desc_producto, 
+                    "Lote": lote_traz,
+                    "Proceso Aplicado": tipo_proceso, 
+                    "Peso Inicial": p_inicial, 
+                    "Peso Final": p_final, 
+                    "Termo Destino": n_termo_destino, 
+                    "Rendimiento Real": f"{rend_real:.1f}%", 
+                    "Proceso Destino": proceso_destino
                 }
                 st.session_state.filas_trazabilidad.append(nueva_fila_traz)
                 st.rerun()
 
         if st.session_state.filas_trazabilidad:
-            st.markdown("### ✏️ Tabla de Trazabilidad (Editable en vivo):")
-            df_traz_edit = pd.DataFrame(st.session_state.filas_trazabilidad)
-            
-            df_traz_corregido = st.data_editor(df_traz_edit, use_container_width=True, num_rows="dynamic", key="editor_traz")
-            st.session_state.filas_trazabilidad = df_traz_corregido.to_dict('records')
-            
+            st.dataframe(pd.DataFrame(st.session_state.filas_trazabilidad), use_container_width=True)
             col_btn3, col_btn4 = st.columns(2)
             with col_btn3:
-                if st.button("💾 Guardar y Subir Trazabilidad a Drive", use_container_width=True):
-                    bloque_traz_completo = []
-                    for f in st.session_state.filas_trazabilidad:
-                        meta = {
-                            "Fecha_Control": traz_fecha.strftime("%d/%m/%Y"),
-                            "Hora_Inicio": traz_hora_inicio, "Hora_Fin": traz_hora_fin,
-                            "Elaborado_Por": traz_elaborado
-                        }
-                        meta.update(f)
-                        bloque_traz_completo.append(meta)
+                if st.button("💾 Guardar y Procesar Trazabilidad", use_container_width=True):
+                    if not st.session_state.filas_trazabilidad:
+                        st.warning("⚠️ La tabla de trazabilidad está vacía.")
+                    else:
+                        # 🖨️ PASO 1: Grabamos las líneas EN EL ACTO para el formato imprimible
+                        st.session_state.datos_impresion_trazabilidad = list(st.session_state.filas_trazabilidad)
+                        st.success("📝 ¡Líneas de trazabilidad listas para imprimir!")
                         
-                    if guardar_en_sheets("Trazabilidad", bloque_traz_completo):
-                        encab_traz_pdf = {"Encargado": traz_elaborado, "Fecha": traz_fecha.strftime("%d/%m/%Y")}
-                        pdf_bytes = generar_pdf_reporte("Control de Trazabilidad", encab_traz_pdf, df_traz_corregido)
-                        id_d = subir_pdf_a_drive(f"Trazabilidad_{traz_fecha.strftime('%d%m%Y')}.pdf", pdf_bytes)
-                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {id_d})")
+                        # ☁️ PASO 2: Intentamos enviarlo a la nube
+                        st.info("Subiendo copia a Google Sheets...")
+                        if guardar_en_sheets("Trazabilidad", st.session_state.filas_trazabilidad):
+                            st.success("✨ ¡Respaldado en la nube exitosamente!")
+                            st.session_state.filas_trazabilidad = [] # Solo limpia la pantalla si la nube respondió bien
+                            st.rerun()
+                        else:
+                            st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
+            
             with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
                     st.rerun()
 
-    with tab_traz_historial:
-        st.markdown("### 🗂️ Buscador de Trazabilidades Anteriores")
-        if st.button("🔄 Descargar Historial de Trazabilidad"):
-            st.session_state.df_historial_traz = obtener_historial("Trazabilidad")
-            
-        if 'df_historial_traz' in st.session_state and not st.session_state.df_historial_traz.empty:
-            df_th = st.session_state.df_historial_traz
-            lotes_traz_disp = df_th["Lote"].unique()
-            lote_t_sel = st.selectbox("Seleccione el Lote de Trazabilidad:", lotes_traz_disp)
-            
-            if lote_t_sel:
-                filtrado_t = df_th[df_th["Lote"] == lote_t_sel]
-                st.dataframe(filtrado_t, use_container_width=True)
-                if st.button("📖 Cargar en Vista de Impresión Trazabilidad"):
-                    col_tabla_traz = ["Fecha Almacenamiento", "No. Termo", "Descripcion", "Lote", "Proceso Aplicado", "Peso Inicial", "Peso Final", "Termo Destino", "Rendimiento Real", "Proceso Destino"]
-                    st.session_state.filas_trazabilidad = filtrado_t[col_tabla_traz].to_dict('records')
-                    st.success("¡Cargado con éxito en el formato imprimible!")
-        else:
-            st.write("Presiona el botón para consultar los registros históricos de procesos.")
-
     with tab_traz_impresion:
         traz_rows_html = ""
         filas_traz_imp = st.session_state.filas_trazabilidad.copy()
+        
         while len(filas_traz_imp) < 18: filas_traz_imp.append({})
         
         for ft in filas_traz_imp:
             traz_rows_html += f"""
             <tr style="height: 22px;">
-                <td style="border: 1px solid #000;">{ft.get('Fecha Almacenamiento', '')}</td>
+                <td style="border: 1px solid #000; font-size: 8.5pt;">{ft.get('Fecha Almacenamiento', '')}</td>
                 <td style="border: 1px solid #000;">{ft.get('No. Termo', '')}</td>
                 <td style="border: 1px solid #000; text-align: left; padding-left: 4px;">{ft.get('Descripcion', '')}</td>
                 <td style="border: 1px solid #000;">{ft.get('Lote', '')}</td>
-                <td style="border: 1px solid #000;">{ft.get('Proceso Aplicado', '')}</td>
-                <td style="border: 1px solid #000; font-weight: bold;">{ft.get('Peso Inicial', '')}</td>
-                <td style="border: 1px solid #000; font-weight: bold;">{ft.get('Peso Final', '')}</td>
+                <td style="border: 1px solid #000; font-size: 8pt;">{ft.get('Proceso Aplicado', '')}</td>
+                <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Inicial'):,.1f}" if ft.get('Peso Inicial') else ''}</td>
+                <td style="border: 1px solid #000; font-weight: bold;">{f"{ft.get('Peso Final'):,.1f}" if ft.get('Peso Final') else ''}</td>
                 <td style="border: 1px solid #000;">{ft.get('Termo Destino', '')}</td>
                 <td style="border: 1px solid #000; font-weight: bold;">{ft.get('Rendimiento Real', '')}</td>
-                <td style="border: 1px solid #000;">{ft.get('Proceso Destino', '')}</td>
+                <td style="border: 1px solid #000; font-size: 8pt;">{ft.get('Proceso Destino', '')}</td>
             </tr>
             """
             
         documento_traz_html = f"""
         <html><head><style>
-            @media print {{ button {{ display: none !important; }} }}
-            body {{ font-family: 'Arial', sans-serif; color: black; }}
-            #hoja-traz {{ width: 11.1in; margin: 0 auto; padding: 6px; border: 1px solid #000; }}
-            table {{ width: 100%; border-collapse: collapse; font-size: 8.5pt; }}
-            th, td {{ border: 1px solid #000; padding: 4px; }}
+            @media print {{ 
+                button {{ display: none !important; }} 
+                body {{ background-color: white; color: black; padding: 0; margin: 0; }} 
+                @page {{ size: letter landscape; margin: 0.15in; }}
+            }}
+            body {{ font-family: 'Arial', sans-serif; background-color: #fafafa; margin: 0; padding: 2px; }}
+            #hoja-trazabilidad {{ background: white; width: 11.1in; height: auto; min-height: 5.5in; margin: 0 auto; box-sizing: border-box; padding: 6px; display: flex; flex-direction: column; justify-content: flex-start; color: black; border: 1px solid #000; }}
+            .header-table {{ margin-bottom: 8px; width: 100%; border-collapse: collapse; }}
+            .grid-traz {{ display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.8fr; border: 1px solid #000; padding: 5px; font-size: 9pt; margin-bottom: 8px; line-height: 1.4; }}
+            table {{ table-layout: fixed; width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; }}
+            th, td {{ border: 1px solid #000; overflow: hidden; }}
+            .obs-title {{ font-size: 8.5pt; font-weight: bold; margin-top: 4px; line-height: 1.4; text-align: justify; width: 100%; word-break: break-all; }}
+            .custom-traz-footer {{ font-size: 7.2pt; line-height: 1.4; font-weight: normal; margin-top: 10px; text-align: justify; }}
         </style></head><body>
-            <div style="text-align: center; margin-bottom: 4px;">
-                <button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR / GUARDAR PDF TRAZABILIDAD</button>
-            </div>
-            <div id="hoja-traz">
-                <table style="width:100%; margin-bottom:10px; border:none;">
-                    <tr style="border:none;">
-                        <td style="width:14%; border:none;">{LOGO_NICALAPIA_SVG}</td>
-                        <td style="width:66%; font-size:13pt; font-weight:bold; border:none;">Nicaraguan Tilapia (Nicalapia S.A)<br><span style="font-size:10pt;">FORMATO DE CONTROL DE TRAZABILIDAD DE PRODUCTO EN PROCESO</span></td>
-                        <td style="width:20%; text-align:left; font-size:8pt; border:none;">CODIGO: FT-PROD-03<br>VERSION: 1<br>Año: 2026</td>
-                    </tr>
-                </table>
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border:1px solid #000; padding:5px; font-size:9pt; margin-bottom:10px;">
-                    <div><b>FECHA:</b> {traz_fecha.strftime('%d/%m/%Y')}</div>
-                    <div><b>H. INICIO:</b> {traz_hora_inicio}</div>
-                    <div><b>H. FINAL:</b> {traz_hora_fin}</div>
-                    <div><b>ELABORÓ:</b> {traz_elaborado}</div>
-                </div>
-                <table>
-                    <thead>
-                        <tr style="background-color:#f2f2f2;">
-                            <th>FECHA ALM.</th><th>N° TERMO</th><th>DESCRIPCIÓN PRODUCTO</th><th>LOTE</th><th>PROCESO APLICADO</th><th>P. INICIAL</th><th>P. FINAL</th><th>TERMO DEST.</th><th>REND.</th><th>PROCESO DESTINO</th>
+            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR TRAZABILIDAD (FT-PROD-03)</button></div>
+            <div id="hoja-trazabilidad">
+                <div>
+                    <table class="header-table">
+                        <tr>
+                            <td style="width: 14%; padding: 1px;">{LOGO_NICALAPIA_SVG}</td>
+                            <td style="width: 64%; vertical-align: middle;">
+                                <span style="font-size: 13.5pt; font-weight: bold;">Nicaraguan Tilapia (Nicalapia S.A)</span><br>
+                                <span style="font-size: 11pt; font-weight: bold; letter-spacing: 0.2px;">FORMATO DE CONTROL DE TRAZABILIDAD DE PRODUCTO EN PROCESO</span>
+                            </td>
+                            <td style="width: 22%; font-size: 8.5pt; font-weight: bold; text-align: left; padding-left: 8px; line-height: 1.3; border-left: 2px solid #000;">CODIGO: FT-PROD-03<br>FECHA ULTIMA VERSION:<br>Julio 2026<br>Versión: 1</td>
                         </tr>
-                    </thead>
-                    <tbody>{traz_rows_html}</tbody>
-                </table>
-            </div>
-        </body></html>
+                    </table>
+                    <div class="grid-traz">
+                        <div><b>FECHA:</b> {traz_fecha.strftime('%d/%m/%Y')}</div>
+                        <div><b>Hora Inicio:</b> {st.session_state.traz_hora_inicio}</div>
+                        <div><b>Hora Final:</b> {st.session_state.traz_hora_fin}</div>
+                        <div><b>ELABORADO POR:</b> {st.session_state.traz_elaborado}</div>
+                    </div>
+                    <table>
+                        <colgroup>
+                            <col style="width: 11%;"><col style="width: 8%;"><col style="width: 21%;"><col style="width: 9%;"><col style="width: 14%;"><col style="width: 8%;"><col style="width: 8%;"><col style="width: 8%;"><col style="width: 10%;"><col style="width: 13%;">
+                        </colgroup>
+                        <thead>
+                            <tr style="background-color: #f2f2f2; height: 28px; font-size: 8.5pt;">
+                                <th>FECHA DE<br>Almacenamiento</th><th>No. DE<br>TERMO</th><th>DESCRIPCION DEL PRODUCTO</th><th>LOTE</th><th>FECHA Y TIPO DE<br>PROCESO APLICADO</th><th>PESO INICIAL</th><th>PESO FINAL</th><th>N° DE TERMO<br>DESTINO</th><th>RENDIMIENTO<br>AUTOMÁTICO</th><th>FECHA Y PROCESO<br>DESTINO</th>
+                            </tr>
+                        </thead>
+                        <tbody>{traz_rows_html}</tbody>
+                    </table>
+                </div>
+                
+                <div class="obs-title">
+                    <b>OBSERVACIONES:</b> <b>________________________________________________________________________________________________________________________________________________________</b>
+                    <b>___________________________________________________________________________________________________________________________________________________________________________________________________________________</b>
+
+                    
+                    <table style="border: none; margin-top: 15px; margin-bottom: 5px; width: 100%;">
+                        <tr style="background: none;">
+                            <td style="border: none; text-align: left; font-size: 9pt; padding: 0;"><b>Supervisado por:</b> ___________________________</td>
+                            <td style="border: none; text-align: right; font-size: 9pt; padding: 0;"><b>Verificado por:</b> ___________________________</td>
+
+                        </tr>
+                    </table>
+                    
+                    <hr style="border: 0; border-top: 1px solid #000; margin-top: 15px; margin-bottom: 10px;">
+                    
+                    <div class="custom-traz-footer">
+                        <b>Frecuencia del monitoreo:</b> Cada vez que se procesen productos en las Áreas de Almacenamiento Materia Prima, Procesos Varios, Fileteo, Empaque Al Vacío, Empaque Congelado.&nbsp;&nbsp;&nbsp;&nbsp;<b>Temperatura:</b> inferior a &le; -4.0°C.<br>
+                        <span style="font-weight: bold;">Elaborado el 09/08/2024</span>
+                        <div style="text-align: center; font-weight: bold; margin-top: 4px;">
+                            Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
+                        </div>
+                    </div>
+                </div>
+            </div></body></html>
         """
-        components.html(documento_traz_html, height=650, scrolling=True)
+        components.html(documento_traz_html, height=750, scrolling=True)
