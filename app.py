@@ -227,7 +227,7 @@ if modulo == "📊 Recepción de Materia Prima":
             
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
-                if st.button("💾 Guardar, Procesar y Subir a Drive", use_container_width=True, type="balanced"):
+                if st.button("💾 Guardar, Procesar y Subir a Drive", use_container_width=True, type="primary"):
                     # Compilar registros estructurados con metadata completa para el historial
                     bloque_completo = []
                     for f in st.session_state.filas_actuales:
