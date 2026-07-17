@@ -5,6 +5,10 @@ from datetime import datetime
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+import io
+from fpdf import FPDF
 
 st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="🐟", layout="wide")
 
@@ -21,47 +25,103 @@ def check_password():
             usuario = st.text_input("Usuario")
             contrasena = st.text_input("Contraseña", type="password")
             if st.form_submit_button("Entrar"):
-                # Para mayor seguridad, puedes poner esto en st.secrets más adelante
                 if usuario == "admin" and contrasena == "nicalapia123":
                     st.session_state.logged_in = True
                     st.rerun()
                 else:
                     st.error("Usuario o contraseña incorrectos")
-        st.stop() # Detiene el resto del código si no ha iniciado sesión
+        st.stop()
 
-check_password() # Ejecuta el login antes de cargar la app
+check_password()
 
 # ==========================================
-# ☁️ CONEXIÓN A GOOGLE SHEETS
+# ☁️ CONEXIÓN A GOOGLE SHEETS Y DRIVE
 # ==========================================
 @st.cache_resource
 def init_connection():
     creds_dict = dict(st.secrets["gcp_service_account"])
-    
-    # 🔧 El truco maestro: Convierte los '\n' de texto en saltos de línea reales
-    if "private_key" in creds_dict:
-        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-        
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    # Añadidos alcances para Sheets y Drive corporativo
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-    return gspread.authorize(creds)
+    return creds
 
 def guardar_en_sheets(nombre_hoja, datos):
     try:
-        client = init_connection()
+        creds = init_connection()
+        client = gspread.authorize(creds)
         sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
         if isinstance(datos, list) and len(datos) > 0:
-            df = pd.DataFrame(datos)
-            # Evita errores convirtiendo valores nulos en celdas vacías
-            df = df.fillna("") 
+            df = pd.DataFrame(datos).fillna("") 
             sheet.append_rows(df.values.tolist())
             return True
     except Exception as e:
-        # Esto te dirá exactamente en la pantalla qué credencial o ID está fallando
-        st.error(f"🚨 Detalle del error en Google Sheets: {e}")
+        st.error(f"🚨 Error en Google Sheets: {e}")
         return False
     return False
 
+def subir_pdf_a_drive(nombre_archivo, pdf_bytes):
+    try:
+        creds = init_connection()
+        service = build('drive', 'v3', credentials=creds)
+        folder_id = st.secrets.get("drive_folder_id", "") # Opcional: ID de carpeta compartida en secrets
+        
+        file_metadata = {'name': nombre_archivo, 'mimeType': 'application/pdf'}
+        if folder_id:
+            file_metadata['parents'] = [folder_id]
+            
+        media = MediaIoBaseUpload(io.BytesIO(pdf_bytes), mimetype='application/pdf', resumable=True)
+        file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        return file.get('id')
+    except Exception as e:
+        st.error(f"🚨 Error al subir a Google Drive: {e}")
+        return None
+
+def obtener_historial(nombre_hoja):
+    try:
+        creds = init_connection()
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
+        datos = sheet.get_all_records()
+        return pd.DataFrame(datos)
+    except Exception as e:
+        st.error(f"No se pudo conectar al historial: {e}")
+        return pd.DataFrame()
+
+# ==========================================
+# 📄 GENERADOR DE PDF NATIVO
+# ==========================================
+def generar_pdf_reporte(titulo, encabezado, df_datos):
+    pdf = FPDF(orientation="L", unit="mm", format="letter")
+    pdf.add_page()
+    pdf.set_font("helvetica", "B", 14)
+    pdf.cell(0, 10, f"Nicalapia S.A. - {titulo}", ln=True, align="C")
+    pdf.ln(4)
+    
+    # Renderizar Encabezados
+    pdf.set_font("helvetica", "B", 9)
+    for k, v in encabezado.items():
+        pdf.cell(60, 5, f"{k}: {v}", ln=False)
+    pdf.ln(8)
+    
+    # Tabla de Contenidos
+    pdf.set_font("helvetica", "B", 8)
+    columnas = list(df_datos.columns)
+    col_width = 260 / max(len(columnas), 1)
+    
+    for col in columnas:
+        pdf.cell(col_width, 6, str(col)[:12], border=1, align="C")
+    pdf.ln()
+    
+    pdf.set_font("helvetica", "", 8)
+    for _, row in df_datos.iterrows():
+        for col in columnas:
+            pdf.cell(col_width, 5, str(row[col])[:12], border=1, align="C")
+        pdf.ln()
+        
+    return pdf.output()
 
 # ==========================================
 # LISTAS PREDETERMINADAS
@@ -70,24 +130,12 @@ PROVEEDORES_LISTA = ["Chester Espinoza", "Alba Osava", "Omar Mercado", "Darvin L
 ZONAS_LISTA = ["Masachapa", "Casares", "San Juan del Sur", "Las peñitas", "Acopio Blufields", "➕ Escribir manualmente..."]
 PERSONAL_LISTA = ["Wilbert Solis", "Maikelyn Zelaya", "Donald Fonseca", "Alice Mendoza", "Yilbert Solis","➕ Escribir manualmente..."]
 ESPECIES_LISTA = ["Mancha 1-2", "Mancha 2-4", "Mancha 4-6", "Cola Amarilla 2-4", "Cola Amarilla 4-6", "Dientón 1-3", "Dientón 3-5", "Guacamayo 1-3", "➕ Escribir manualmente..."]
+PRODUCTOS_TRAZABILIDAD_LISTA = ["Filete de Dorado sin Piel", "Filete de Robalo Sin piel", "Minuta de yellow Tail", "Minuta de Silk", "Minuta de Rucco", "Lonjas de Atun", "➕ Escribir manualmente..."]
 
-PRODUCTOS_TRAZABILIDAD_LISTA = [
-    "Filete de Dorado sin Piel", 
-    "Filete de Robalo Sin piel", 
-    "Minuta de yellow Tail",
-    "Minuta de Silk",
-    "Minuta de Rucco",
-    "Lonjas de Atun",
-    "➕ Escribir manualmente..."
-]
-
+# Inicialización de Estados
 if 'filas_actuales' not in st.session_state: st.session_state.filas_actuales = []
-if 'hora_inicio' not in st.session_state: st.session_state.hora_inicio = ""
-if 'hora_fin' not in st.session_state: st.session_state.hora_fin = ""
 if 'filas_trazabilidad' not in st.session_state: st.session_state.filas_trazabilidad = []
-if 'traz_hora_inicio' not in st.session_state: st.session_state.traz_hora_inicio = ""
-if 'traz_hora_fin' not in st.session_state: st.session_state.traz_hora_fin = ""
-if 'traz_elaborado' not in st.session_state: st.session_state.traz_elaborado = ""
+if 'historial_ver' not in st.session_state: st.session_state.historial_ver = None
 
 LOGO_NICALAPIA_SVG = """
 <svg width="85" height="62" viewBox="15 15 90 90" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;">
@@ -113,7 +161,14 @@ with st.sidebar:
 # ==============================================================================
 if modulo == "📊 Recepción de Materia Prima":
     st.title("🐟 Clasificación y Recepción de Materia Prima")
-    tab_datos, tab_registro, tab_impresion = st.tabs(["📋 Encabezado", "⚖️ Pesajes", "🖨️ Vista de Impresión"])
+    
+    # Botón global para crear una nueva recepción limpia
+    if st.button("🆕 Crear Nueva Recepción (Limpiar Todo)", type="primary"):
+        st.session_state.filas_actuales = []
+        st.session_state.historial_ver = None
+        st.rerun()
+
+    tab_datos, tab_registro, tab_impresion, tab_historial = st.tabs(["📋 Encabezado", "⚖️ Pesajes", "🖨️ Vista de Impresión", "🗂️ Historial de Registros"])
 
     with tab_datos:
         col1, col2, col3 = st.columns(3)
@@ -131,8 +186,8 @@ if modulo == "📊 Recepción de Materia Prima":
             carta = st.selectbox("Carta de Garantía:", ["SI", "NO"])
         with col3:
             histaminico = st.selectbox("Producto Histamínico:", ["NO", "SI", "N/A"])
-            st.session_state.hora_inicio = st.text_input("Hora Inicio:", value=st.session_state.hora_inicio)
-            st.session_state.hora_fin = st.text_input("Hora Final:", value=st.session_state.hora_fin)
+            hora_inicio = st.text_input("Hora Inicio:", value="08:00 AM")
+            hora_fin = st.text_input("Hora Final:", value="12:00 PM")
 
     with tab_registro:
         with st.form("registro_especie", clear_on_submit=True):
@@ -163,30 +218,67 @@ if modulo == "📊 Recepción de Materia Prima":
                     st.rerun()
 
         if st.session_state.filas_actuales:
-            st.dataframe(pd.DataFrame(st.session_state.filas_actuales).fillna(""), use_container_width=True)
+            st.markdown("### ✏️ Tabla de Pesajes (Puedes editar celdas o corregir pesos directamente aquí abajo):")
+            df_editable = pd.DataFrame(st.session_state.filas_actuales).fillna("")
+            
+            # El data_editor permite guardar cualquier cambio que realice el usuario en vivo
+            df_corregido = st.data_editor(df_editable, use_container_width=True, num_rows="dynamic", key="editor_recep")
+            st.session_state.filas_actuales = df_corregido.to_dict('records')
+            
             col_btn1, col_btn2 = st.columns(2)
             with col_btn1:
-                if st.button("💾 Guardar y Procesar Registro", use_container_width=True):
-                    if not st.session_state.filas_actuales:
-                        st.warning("⚠️ La tabla está vacía. Agrega filas antes de guardar.")
-                    else:
-                        # 🖨️ PASO 1: Grabamos las líneas EN EL ACTO para el formato imprimible
-                        st.session_state.datos_impresion_recepcion = list(st.session_state.filas_actuales)
-                        st.success("📝 ¡Líneas grabadas en el formato imprimible con éxito!")
+                if st.button("💾 Guardar, Procesar y Subir a Drive", use_container_width=True, type="primary"):
+                    # Compilar registros estructurados con metadata completa para el historial
+                    bloque_completo = []
+                    for f in st.session_state.filas_actuales:
+                        meta_fila = {
+                            "Fecha_Registro": datetime.now().strftime("%d/%m/%Y"),
+                            "Proveedor": proveedor, "Zona": zona, "Granja": granja,
+                            "Recibidor": recibidor, "Elaborado": elaborado, "Carta": carta,
+                            "Histaminico": histaminico, "Hora_Inicio": hora_inicio, "Hora_Fin": hora_fin
+                        }
+                        meta_fila.update(f)
+                        bloque_completo.append(meta_fila)
+                    
+                    st.info("Subiendo copia de respaldo a Google Sheets...")
+                    if guardar_en_sheets("Recepcion", bloque_completo):
+                        # Generación automática de PDF y subida a Drive
+                        encab_pdf = {"Proveedor": proveedor, "Fecha": datetime.now().strftime("%d/%m/%y"), "Granja": granja}
+                        pdf_data = generar_pdf_reporte("Clasificación y Recepción", encab_pdf, df_corregido)
                         
-                        # ☁️ PASO 2: Intentamos enviarlo a la nube
-                        st.info("Subiendo copia a Google Sheets...")
-                        if guardar_en_sheets("Recepcion", st.session_state.filas_actuales):
-                            st.success("✨ ¡Respaldado en la nube exitosamente!")
-                            st.session_state.filas_actuales = [] # Solo limpia la pantalla si la nube respondió bien
-                            st.rerun()
+                        id_drive = subir_pdf_a_drive(f"Recepcion_{proveedor}_{lote}.pdf", pdf_data)
+                        if id_drive:
+                            st.success(f"✨ ¡Procesado con éxito! Guardado en Sheets y PDF subido a Drive (ID: {id_drive})")
                         else:
-                            st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
+                            st.warning("⚠️ Guardado en Sheets pero falló la subida automática a Drive.")
+                    else:
+                        st.error("No se pudo conectar con la base de datos de la nube.")
             
             with col_btn2:
-                if st.button("🗑️ Vaciar Tabla", use_container_width=True):
+                if st.button("🗑️ Vaciar Tabla Temporal", use_container_width=True):
                     st.session_state.filas_actuales = []
                     st.rerun()
+
+    with tab_historial:
+        st.markdown("### 🗂️ Buscador de Recepciones Anteriores")
+        if st.button("🔄 Cargar / Actualizar Historial Completo de la Nube"):
+            st.session_state.df_historial_recep = obtener_historial("Recepcion")
+            
+        if 'df_historial_recep' in st.session_state and not st.session_state.df_historial_recep.empty:
+            df_h = st.session_state.df_historial_recep
+            lotes_disponibles = df_h["Lote"].unique()
+            lote_sel = st.selectbox("Seleccione el Lote Histórico que desea revisar o imprimir:", lotes_disponibles)
+            
+            if lote_sel:
+                filtrado = df_h[df_h["Lote"] == lote_sel]
+                st.dataframe(filtrado, use_container_width=True)
+                if st.button("📖 Cargar este registro en la Vista de Impresión"):
+                    # Extraer filas formateadas para la tabla de visualización
+                    columnas_tabla = ["Especie/Talla", "Lote", "Olor", "Color", "Textura", "Sabor", "Nº Termos", "ºC", "Peso 1", "Peso 2", "Peso 3", "Peso 4", "Peso 5", "Peso 6", "Peso 7", "Peso 8"]
+                    st.session_state.filas_actuales = filtrado[columnas_tabla].to_dict('records')
+                    st.success("¡Cargado! Dirígete a la pestaña 'Vista de Impresión' para ver el formato oficial.")
+        else:
+            st.write("Presiona el botón superior para descargar los datos de Google Sheets.")
 
     with tab_impresion:
         gran_total_libras = 0.0
@@ -241,7 +333,7 @@ if modulo == "📊 Recepción de Materia Prima":
             .obs-lines {{ margin-top: 3px; font-size: 8.5pt; line-height: 1.4; text-align: justify; width: 100%; word-break: break-all; }}
             .custom-recepcion-footer {{ font-size: 7.2pt; line-height: 1.4; font-weight: normal; margin-top: 4px; text-align: justify; }}
         </style></head><body>
-            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR RECEPCIÓN (FT-HACCP-005)</button></div>
+            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR / GUARDAR PDF</button></div>
             <div id="hoja-oficial">
                 <div>
                     <table class="header-table">
@@ -312,22 +404,26 @@ if modulo == "📊 Recepción de Materia Prima":
         """
         components.html(documento_imprimible, height=750, scrolling=True)
 
+
 # ==============================================================================
 # MÓDULO 2: SEGUIMIENTO DE TRAZABILIDAD (FT-PROD-03)
 # ==============================================================================
 else:
     st.title("🔍 Control de Trazabilidad de Producto en Proceso")
-    tab_traz_datos, tab_traz_registro, tab_traz_impresion = st.tabs(["📋 Encabezado", "📐 Procesos", "🖨️ Vista de Impresión"])
+    
+    if st.button("🆕 Crear Nueva Trazabilidad (Limpiar Todo)", type="primary"):
+        st.session_state.filas_trazabilidad = []
+        st.rerun()
+
+    tab_traz_datos, tab_traz_registro, tab_traz_impresion, tab_traz_historial = st.tabs(["📋 Encabezado", "📐 Procesos", "🖨️ Vista de Impresión", "🗂️ Historial"])
     
     with tab_traz_datos:
         c1, c2, c3 = st.columns(3)
-        with c1: 
-            traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
+        with c1: traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
         with c2:
-            st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value=st.session_state.traz_hora_inicio)
-            st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso:", value=st.session_state.traz_hora_fin)
-        with c3: 
-            st.session_state.traz_elaborado = st.text_input("Elaborado Por:", value=st.session_state.traz_elaborado)
+            traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value="07:00 AM")
+            traz_hora_fin = st.text_input("Hora Final Proceso:", value="05:00 PM")
+        with c3: traz_elaborado = st.text_input("Elaborado Por:", value="Alice Mendoza")
 
     with tab_traz_registro:
         with st.form("form_trazabilidad", clear_on_submit=True):
@@ -339,7 +435,7 @@ else:
                 desc_producto = st.text_input("Escriba Producto Manual:") if prod_sel == "➕ Escribir manualmente..." else prod_sel
             with r2:
                 lote_traz = st.text_input("Lote:")
-                tipo_proceso = st.text_input("Fecha y Tipo de Proceso Aplicado:")
+                tipo_proceso = st.text_input("Fecha y Tipo de Proceso:")
                 n_termo_destino = st.text_input("N° de Termo Destino:")
             with r3:
                 p_inicial = st.number_input("Peso Inicial (Lbs):", min_value=0.0)
@@ -349,45 +445,63 @@ else:
             if st.form_submit_button("➕ REGISTRAR FILA"):
                 rend_real = (p_final / p_inicial * 100) if p_inicial > 0 else 0.0
                 nueva_fila_traz = {
-                    "Fecha Almacenamiento": f_almacenamiento.strftime("%d/%m/%Y"), 
-                    "No. Termo": n_termo, 
-                    "Descripcion": desc_producto, 
-                    "Lote": lote_traz,
-                    "Proceso Aplicado": tipo_proceso, 
-                    "Peso Inicial": p_inicial, 
-                    "Peso Final": p_final, 
-                    "Termo Destino": n_termo_destino, 
-                    "Rendimiento Real": f"{rend_real:.1f}%", 
-                    "Proceso Destino": proceso_destino
+                    "Fecha Almacenamiento": f_almacenamiento.strftime("%d/%m/%Y"), "No. Termo": n_termo, 
+                    "Descripcion": desc_producto, "Lote": lote_traz, "Proceso Aplicado": tipo_proceso, 
+                    "Peso Inicial": p_inicial, "Peso Final": p_final, "Termo Destino": n_termo_destino, 
+                    "Rendimiento Real": f"{rend_real:.1f}%", "Proceso Destino": proceso_destino
                 }
                 st.session_state.filas_trazabilidad.append(nueva_fila_traz)
                 st.rerun()
 
         if st.session_state.filas_trazabilidad:
-            st.dataframe(pd.DataFrame(st.session_state.filas_trazabilidad), use_container_width=True)
+            st.markdown("### ✏️ Tabla de Trazabilidad (Editable en vivo):")
+            df_traz_edit = pd.DataFrame(st.session_state.filas_trazabilidad)
+            
+            df_traz_corregido = st.data_editor(df_traz_edit, use_container_width=True, num_rows="dynamic", key="editor_traz")
+            st.session_state.filas_trazabilidad = df_traz_corregido.to_dict('records')
+            
             col_btn3, col_btn4 = st.columns(2)
             with col_btn3:
-                if st.button("💾 Guardar y Procesar Trazabilidad", use_container_width=True):
-                    if not st.session_state.filas_trazabilidad:
-                        st.warning("⚠️ La tabla de trazabilidad está vacía.")
-                    else:
-                        # 🖨️ PASO 1: Grabamos las líneas EN EL ACTO para el formato imprimible
-                        st.session_state.datos_impresion_trazabilidad = list(st.session_state.filas_trazabilidad)
-                        st.success("📝 ¡Líneas de trazabilidad listas para imprimir!")
+                if st.button("💾 Guardar y Subir Trazabilidad a Drive", use_container_width=True):
+                    bloque_traz_completo = []
+                    for f in st.session_state.filas_trazabilidad:
+                        meta = {
+                            "Fecha_Control": traz_fecha.strftime("%d/%m/%Y"),
+                            "Hora_Inicio": traz_hora_inicio, "Hora_Fin": traz_hora_fin,
+                            "Elaborado_Por": traz_elaborado
+                        }
+                        meta.update(f)
+                        bloque_traz_completo.append(meta)
                         
-                        # ☁️ PASO 2: Intentamos enviarlo a la nube
-                        st.info("Subiendo copia a Google Sheets...")
-                        if guardar_en_sheets("Trazabilidad", st.session_state.filas_trazabilidad):
-                            st.success("✨ ¡Respaldado en la nube exitosamente!")
-                            st.session_state.filas_trazabilidad = [] # Solo limpia la pantalla si la nube respondió bien
-                            st.rerun()
-                        else:
-                            st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
-            
+                    if guardar_en_sheets("Trazabilidad", bloque_traz_completo):
+                        encab_traz_pdf = {"Encargado": traz_elaborado, "Fecha": traz_fecha.strftime("%d/%m/%Y")}
+                        pdf_bytes = generar_pdf_reporte("Control de Trazabilidad", encab_traz_pdf, df_traz_corregido)
+                        id_d = subir_pdf_a_drive(f"Trazabilidad_{traz_fecha.strftime('%d%m%Y')}.pdf", pdf_bytes)
+                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {id_d})")
             with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
                     st.rerun()
+
+    with tab_traz_historial:
+        st.markdown("### 🗂️ Buscador de Trazabilidades Anteriores")
+        if st.button("🔄 Descargar Historial de Trazabilidad"):
+            st.session_state.df_historial_traz = obtener_historial("Trazabilidad")
+            
+        if 'df_historial_traz' in st.session_state and not st.session_state.df_historial_traz.empty:
+            df_th = st.session_state.df_historial_traz
+            lotes_traz_disp = df_th["Lote"].unique()
+            lote_t_sel = st.selectbox("Seleccione el Lote de Trazabilidad:", lotes_traz_disp)
+            
+            if lote_t_sel:
+                filtrado_t = df_th[df_th["Lote"] == lote_t_sel]
+                st.dataframe(filtrado_t, use_container_width=True)
+                if st.button("📖 Cargar en Vista de Impresión Trazabilidad"):
+                    col_tabla_traz = ["Fecha Almacenamiento", "No. Termo", "Descripcion", "Lote", "Proceso Aplicado", "Peso Inicial", "Peso Final", "Termo Destino", "Rendimiento Real", "Proceso Destino"]
+                    st.session_state.filas_trazabilidad = filtrado_t[col_tabla_traz].to_dict('records')
+                    st.success("¡Cargado con éxito en el formato imprimible!")
+        else:
+            st.write("Presiona el botón para consultar los registros históricos de procesos.")
 
     with tab_traz_impresion:
         traz_rows_html = ""
@@ -427,7 +541,7 @@ else:
             .obs-title {{ font-size: 8.5pt; font-weight: bold; margin-top: 4px; line-height: 1.4; text-align: justify; width: 100%; word-break: break-all; }}
             .custom-traz-footer {{ font-size: 7.2pt; line-height: 1.4; font-weight: normal; margin-top: 10px; text-align: justify; }}
         </style></head><body>
-            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR TRAZABILIDAD (FT-PROD-03)</button></div>
+            <div style="text-align: center; margin-bottom: 4px;"><button onclick="window.print();" style="background-color: #124491; color: white; border: none; padding: 6px 16px; font-weight: bold; cursor: pointer; font-size:11pt;">🖨️ IMPRIMIR / GUARDAR PDF TRAZABILIDAD</button></div>
             <div id="hoja-trazabilidad">
                 <div>
                     <table class="header-table">
