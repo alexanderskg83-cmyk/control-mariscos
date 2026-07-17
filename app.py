@@ -349,7 +349,7 @@ if modulo == "📊 Recepción de Materia Prima":
                     <div class="grid-container">
                         <div><b>FECHA/HORA DE RECEPCIÓN:</b> {fecha_hoy}<br><b>NOMBRE DE LA GRANJA:</b> {granja}<br><b>PROVEEDOR:</b> {proveedor}</div>
                         <div><b>ZONA DE PESCA:</b> {zona}<br><b>CARTA DE GARANTÍA:</b> {carta_si} &nbsp;&nbsp; {carta_no}<br><b>PRODUCTO HISTAMÍNICO:</b> {hist_si} &nbsp;&nbsp; {hist_no} &nbsp;&nbsp; {hist_na}</div>
-                        <div><b>HORA INICIO:</b> {st.session_state.hora_inicio}<br><b>HORA FINAL:</b> {st.session_state.hora_fin}<br><b>RECIBIDOR/PESADOR:</b> {recibidor}<br><b>ELABORADO POR:</b> {elaborado}</div>
+                        <div><b>HORA INICIO:</b> {hora_inicio}<br><b>HORA FINAL:</b> {hora_fin}<br><b>RECIBIDOR/PESADOR:</b> {recibidor}<br>
                     </div>
                     <table>
                         <colgroup>
