@@ -1,6 +1,5 @@
 streamlit
 pandas
-jinja2 
 gspread
-google-auth
-pip install fpdf2 google-api-python-client
+google-api-python-client
+fpdf2
