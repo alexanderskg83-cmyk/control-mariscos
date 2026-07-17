@@ -3,3 +3,4 @@ pandas
 jinja2 
 gspread
 google-auth
+pip install fpdf2 google-api-python-client
