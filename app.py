@@ -1,3 +1,4 @@
+import json
 import streamlit as st
 import streamlit.components.v1 as components
 from datetime import datetime
@@ -35,12 +36,20 @@ check_password() # Ejecuta el login antes de cargar la app
 # ==========================================
 @st.cache_resource
 def init_connection():
-    # Cargar credenciales desde los secretos de Streamlit
-    creds_dict = dict(st.secrets["gcp_service_account"])
+    # Tomamos lo que esté guardado en los secretos
+    creds_input = st.secrets["gcp_service_account"]
+    
+    # 🕵️‍♂️ Si se guardó como texto plano (String JSON), lo convertimos a diccionario
+    if isinstance(creds_input, str):
+        creds_dict = json.loads(creds_input)
+    else:
+        # Si ya está estructurado como formato TOML
+        creds_dict = dict(creds_input)
+        
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
-
+    
 def guardar_en_sheets(nombre_hoja, datos):
     try:
         client = init_connection()
