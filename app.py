@@ -36,8 +36,12 @@ check_password() # Ejecuta el login antes de cargar la app
 # ==========================================
 @st.cache_resource
 def init_connection():
-    # Al estar bien estructurado el TOML, esto vuelve a ser un diccionario puro de Python
     creds_dict = dict(st.secrets["gcp_service_account"])
+    
+    # 🔧 El truco maestro: Convierte los '\n' de texto en saltos de línea reales
+    if "private_key" in creds_dict:
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+        
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
