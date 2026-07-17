@@ -556,7 +556,7 @@ else:
                     </table>
                     <div class="grid-traz">
                         <div><b>FECHA:</b> {traz_fecha.strftime('%d/%m/%Y')}</div>
-                        <div><b>Hora Inicio:</b> {st.session_state.traz_hora_inicio}</div>
+                        <div><b>HORA INICIO:</b> {hora_inicio}<br><b>HORA FINAL:</b> {hora_fin}<br><b>RECIBIDOR/PESADOR:</b> {recibidor}<br>
                         <div><b>Hora Final:</b> {st.session_state.traz_hora_fin}</div>
                         <div><b>ELABORADO POR:</b> {st.session_state.traz_elaborado}</div>
                     </div>
