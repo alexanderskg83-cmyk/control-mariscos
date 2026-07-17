@@ -1,9 +1,12 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from datetime import datetime
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
+
 st.set_page_config(page_title="Nicalapia - Control y Trazabilidad", page_icon="🐟", layout="wide")
+
 # ==========================================
 # 🔐 SISTEMA DE LOGIN
 # ==========================================
@@ -69,7 +72,7 @@ PRODUCTOS_TRAZABILIDAD_LISTA = [
     "Minuta de yellow Tail",
     "Minuta de Silk",
     "Minuta de Rucco",
-    "Lonjas de Atun", # Coma agregada aquí
+    "Lonjas de Atun",
     "➕ Escribir manualmente..."
 ]
 
@@ -313,11 +316,13 @@ else:
     
     with tab_traz_datos:
         c1, c2, c3 = st.columns(3)
-        with c1: traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
+        with c1: 
+            traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
         with c2:
             st.session_state.traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value=st.session_state.traz_hora_inicio)
             st.session_state.traz_hora_fin = st.text_input("Hora Final Proceso:", value=st.session_state.traz_hora_fin)
-        with c3: st.session_state.traz_elaborado = st.text_input("Elaborado Por:", value=st.session_state.traz_elaborado)
+        with c3: 
+            st.session_state.traz_elaborado = st.text_input("Elaborado Por:", value=st.session_state.traz_elaborado)
 
     with tab_traz_registro:
         with st.form("form_trazabilidad", clear_on_submit=True):
@@ -339,8 +344,16 @@ else:
             if st.form_submit_button("➕ REGISTRAR FILA"):
                 rend_real = (p_final / p_inicial * 100) if p_inicial > 0 else 0.0
                 nueva_fila_traz = {
-                    "Fecha Almacenamiento": f_almacenamiento.strftime("%d/%m/%Y"), "No. Termo": n_termo, "Descripcion": desc_producto, "Lote": lote_traz,
-                    "Proceso Aplicado": tipo_proceso, "Peso Inicial": p_inicial, "Peso Final": p_final, "Termo Destino": n_termo_destino, "Rendimiento Real": f"{rend_real:.1f}%", "Proceso Destino": proceso_destino
+                    "Fecha Almacenamiento": f_almacenamiento.strftime("%d/%m/%Y"), 
+                    "No. Termo": n_termo, 
+                    "Descripcion": desc_producto, 
+                    "Lote": lote_traz,
+                    "Proceso Aplicado": tipo_proceso, 
+                    "Peso Inicial": p_inicial, 
+                    "Peso Final": p_final, 
+                    "Termo Destino": n_termo_destino, 
+                    "Rendimiento Real": f"{rend_real:.1f}%", 
+                    "Proceso Destino": proceso_destino
                 }
                 st.session_state.filas_trazabilidad.append(nueva_fila_traz)
                 st.rerun()
@@ -348,7 +361,7 @@ else:
         if st.session_state.filas_trazabilidad:
             st.dataframe(pd.DataFrame(st.session_state.filas_trazabilidad), use_container_width=True)
             col_btn3, col_btn4 = st.columns(2)
-        with col_btn3:
+            with col_btn3:
                 if st.button("💾 Guardar y Procesar Trazabilidad", use_container_width=True):
                     if not st.session_state.filas_trazabilidad:
                         st.warning("⚠️ La tabla de trazabilidad está vacía.")
@@ -366,7 +379,7 @@ else:
                         else:
                             st.warning("⚠️ Los datos se quedaron guardados abajo para imprimir, pero NO se subieron a la nube. Revisa el error de arriba.")
             
-        with col_btn4:
+            with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
                     st.rerun()
@@ -459,7 +472,7 @@ else:
                     <div class="custom-traz-footer">
                         <b>Frecuencia del monitoreo:</b> Cada vez que se procesen productos en las Áreas de Almacenamiento Materia Prima, Procesos Varios, Fileteo, Empaque Al Vacío, Empaque Congelado.&nbsp;&nbsp;&nbsp;&nbsp;<b>Temperatura:</b> inferior a &le; -4.0°C.<br>
                         <span style="font-weight: bold;">Elaborado el 09/08/2024</span>
-                        <div style="text-align: center; font-weight: bold; font-size: 7pt; margin-top: 5px;">
+                        <div style="text-align: center; font-weight: bold; margin-top: 4px;">
                             Este Documento es propiedad de Nicaraguan Tilapia (Nicalapia S.A). Queda prohibida su reproducción total o parcial sin la autorización expresa de las autoridades superiores.
                         </div>
                     </div>
