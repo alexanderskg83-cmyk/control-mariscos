@@ -251,7 +251,7 @@ if modulo == "📊 Recepción de Materia Prima":
                         
                         id_drive = subir_pdf_a_drive(f"Recepcion_{proveedor}_{lote}.pdf", pdf_data)
                         if id_drive:
-                            st.success(f"✨ ¡Procesado con éxito! Guardado en Sheets y PDF subido a Drive "(ID: {1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC})")
+                            st.success(f"✨ ¡Procesado con éxito! Guardado en Sheets y PDF subido a Drive (ID: 1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC)")
                         else:
                             st.warning("⚠️ Guardado en Sheets pero falló la subida automática a Drive.")
                     else:
