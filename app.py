@@ -70,7 +70,7 @@ def subir_pdf_a_drive(nombre_archivo, pdf_bytes):
         
         file_metadata = {'name': nombre_archivo, 'mimeType': 'application/pdf'}
         if folder_id:
-            file_metadata['parents'] = [folder_id]
+            file_metadata['parents'] = [1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC]
             
         media = MediaIoBaseUpload(io.BytesIO(pdf_bytes), mimetype='application/pdf', resumable=True)
         file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
