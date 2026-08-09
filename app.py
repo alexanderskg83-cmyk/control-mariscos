@@ -55,7 +55,7 @@ def guardar_en_sheets(nombre_hoja, datos):
         sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
         if isinstance(datos, list) and len(datos) > 0:
             df = pd.DataFrame(datos).fillna("") 
-            sheet.append_row(datos, table_range="A1")
+            sheet.append_rows(datos, table_range="A1")
             return True
     except Exception as e:
         st.error(f"🚨 Error en Google Sheets: {e}")
