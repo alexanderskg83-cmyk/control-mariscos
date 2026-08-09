@@ -480,7 +480,7 @@ else:
                         encab_traz_pdf = {"Encargado": traz_elaborado, "Fecha": traz_fecha.strftime("%d/%m/%Y")}
                         pdf_bytes = generar_pdf_reporte("Control de Trazabilidad", encab_traz_pdf, df_traz_corregido)
                         id_d = subir_pdf_a_drive(f"Trazabilidad_{traz_fecha.strftime('%d%m%Y')}.pdf", pdf_bytes)
-                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC})")
+                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {file_id})")
             with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
