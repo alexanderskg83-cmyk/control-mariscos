@@ -453,7 +453,7 @@ else:
                     "Peso Inicial": p_inicial, "Peso Final": p_final, "Termo Destino": n_termo_destino, 
                     "Rendimiento Real": f"{rend_real:.1f}%", "Proceso Destino": proceso_destino
                 }
-                st.session_state.filas_trazabilidad.worksheet.append_row(datos, table_range="A1")
+                st.session_state.filas_trazabilidad.append(nueva_fila_traz)
                 st.rerun()
 
         if st.session_state.filas_trazabilidad:
