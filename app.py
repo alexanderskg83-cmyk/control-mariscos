@@ -66,7 +66,7 @@ def subir_pdf_a_drive(nombre_archivo, pdf_bytes):
     try:
         creds = init_connection()
         service = build('drive', 'v3', credentials=creds)
-        folder_id = st.secrets.get("drive_folder_id", "") # Opcional: ID de carpeta compartida en secrets
+        folder_id = st.secrets.get("drive_folder_id", "1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC") # Opcional: ID de carpeta compartida en secrets
         
         file_metadata = {'name': nombre_archivo, 'mimeType': 'application/pdf'}
         if folder_id:
@@ -136,6 +136,9 @@ PRODUCTOS_TRAZABILIDAD_LISTA = ["Filete de Dorado sin Piel", "Filete de Robalo S
 if 'filas_actuales' not in st.session_state: st.session_state.filas_actuales = []
 if 'filas_trazabilidad' not in st.session_state: st.session_state.filas_trazabilidad = []
 if 'historial_ver' not in st.session_state: st.session_state.historial_ver = None
+if 'traz_hora_inicio' not in st.session_state: st.session_state.traz_hora_inicio = "07:00 AM"
+if 'traz_hora_fin' not in st.session_state: st.session_state.traz_hora_fin = "05:00 PM"
+if 'traz_elaborado' not in st.session_state: st.session_state.traz_elaborado = "Alice Mendoza"
 
 LOGO_NICALAPIA_SVG = """
 <svg width="85" height="62" viewBox="15 15 90 90" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: 0 auto;">
@@ -421,9 +424,9 @@ else:
         c1, c2, c3 = st.columns(3)
         with c1: traz_fecha = st.date_input("Fecha de Control:", value=datetime.now())
         with c2:
-            traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value="07:00 AM")
-            traz_hora_fin = st.text_input("Hora Final Proceso:", value="05:00 PM")
-        with c3: traz_elaborado = st.text_input("Elaborado Por:", value="Alice Mendoza")
+            traz_hora_inicio = st.text_input("Hora Inicio Proceso:", value="07:00 AM", key="traz_hora_inicio")
+            traz_hora_fin = st.text_input("Hora Final Proceso:", value="05:00 PM", key="traz_hora_fin")
+        with c3: traz_elaborado = st.text_input("Elaborado Por:", value="Alice Mendoza", key="traz_elaborado")
 
     with tab_traz_registro:
         with st.form("form_trazabilidad", clear_on_submit=True):
