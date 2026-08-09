@@ -52,7 +52,7 @@ def guardar_en_sheets(nombre_hoja, datos):
     try:
         creds = init_connection()
         client = gspread.authorize(creds)
-        sheet = client.open_by_key(st.secrets["1GOWP1tjf4jBqpHZYZb4MXS-5iLLuRL4PH8o9dxFeHxY"]).worksheet(nombre_hoja)
+        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
         if isinstance(datos, list) and len(datos) > 0:
             df = pd.DataFrame(datos).fillna("") 
             sheet.append_rows(df.values.tolist())
@@ -66,7 +66,7 @@ def subir_pdf_a_drive(nombre_archivo, pdf_bytes):
     try:
         creds = init_connection()
         service = build('drive', 'v3', credentials=creds)
-        folder_id = st.secrets.get("drive_folder_id", "1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC") # Opcional: ID de carpeta compartida en secrets
+        folder_id = st.secrets("folder_id") # Opcional: ID de carpeta compartida en secrets
         
         file_metadata = {'name': nombre_archivo, 'mimeType': 'application/pdf'}
         if folder_id:
@@ -83,7 +83,7 @@ def obtener_historial(nombre_hoja):
     try:
         creds = init_connection()
         client = gspread.authorize(creds)
-        sheet = client.open_by_key(st.secrets["1GOWP1tjf4jBqpHZYZb4MXS-5iLLuRL4PH8o9dxFeHxY"]).worksheet(nombre_hoja)
+        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
         datos = sheet.get_all_records()
         return pd.DataFrame(datos)
     except Exception as e:
