@@ -52,7 +52,7 @@ def guardar_en_sheets(nombre_hoja, datos):
     try:
         creds = init_connection()
         client = gspread.authorize(creds)
-        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
+        sheet = client.open_by_key(st.secrets["1GOWP1tjf4jBqpHZYZb4MXS-5iLLuRL4PH8o9dxFeHxY"]).worksheet(nombre_hoja)
         if isinstance(datos, list) and len(datos) > 0:
             df = pd.DataFrame(datos).fillna("") 
             sheet.append_rows(df.values.tolist())
@@ -83,7 +83,7 @@ def obtener_historial(nombre_hoja):
     try:
         creds = init_connection()
         client = gspread.authorize(creds)
-        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
+        sheet = client.open_by_key(st.secrets["1GOWP1tjf4jBqpHZYZb4MXS-5iLLuRL4PH8o9dxFeHxY"]).worksheet(nombre_hoja)
         datos = sheet.get_all_records()
         return pd.DataFrame(datos)
     except Exception as e:
@@ -251,7 +251,7 @@ if modulo == "📊 Recepción de Materia Prima":
                         
                         id_drive = subir_pdf_a_drive(f"Recepcion_{proveedor}_{lote}.pdf", pdf_data)
                         if id_drive:
-                            st.success(f"✨ ¡Procesado con éxito! Guardado en Sheets y PDF subido a Drive (ID: {id_drive})")
+                            st.success(f"✨ ¡Procesado con éxito! Guardado en Sheets y PDF subido a Drive (ID: {1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC})")
                         else:
                             st.warning("⚠️ Guardado en Sheets pero falló la subida automática a Drive.")
                     else:
@@ -480,7 +480,7 @@ else:
                         encab_traz_pdf = {"Encargado": traz_elaborado, "Fecha": traz_fecha.strftime("%d/%m/%Y")}
                         pdf_bytes = generar_pdf_reporte("Control de Trazabilidad", encab_traz_pdf, df_traz_corregido)
                         id_d = subir_pdf_a_drive(f"Trazabilidad_{traz_fecha.strftime('%d%m%Y')}.pdf", pdf_bytes)
-                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {id_d})")
+                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {1YyU1NxPpSbHaGR91zyiX2txxIF-mWQAC})")
             with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
