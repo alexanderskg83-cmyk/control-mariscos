@@ -55,7 +55,7 @@ def guardar_en_sheets(nombre_hoja, datos):
         sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet(nombre_hoja)
         if isinstance(datos, list) and len(datos) > 0:
             df = pd.DataFrame(datos).fillna("") 
-            sheet.append_rows(df.values.tolist())
+            worksheet.append_row(datos, table_range="A1")
             return True
     except Exception as e:
         st.error(f"🚨 Error en Google Sheets: {e}")
@@ -66,7 +66,7 @@ def subir_pdf_a_drive(nombre_archivo, pdf_bytes):
     try:
         creds = init_connection()
         service = build('drive', 'v3', credentials=creds)
-        folder_id = st.secrets("folder_id") # Opcional: ID de carpeta compartida en secrets
+        folder_id = st.secrets["folder_id"] # Opcional: ID de carpeta compartida en secrets
         
         file_metadata = {'name': nombre_archivo, 'mimeType': 'application/pdf'}
         if folder_id:
@@ -453,7 +453,7 @@ else:
                     "Peso Inicial": p_inicial, "Peso Final": p_final, "Termo Destino": n_termo_destino, 
                     "Rendimiento Real": f"{rend_real:.1f}%", "Proceso Destino": proceso_destino
                 }
-                st.session_state.filas_trazabilidad.append(nueva_fila_traz)
+                st.session_state.filas_trazabilidad.worksheet.append_row(datos, table_range="A1")
                 st.rerun()
 
         if st.session_state.filas_trazabilidad:
@@ -480,7 +480,7 @@ else:
                         encab_traz_pdf = {"Encargado": traz_elaborado, "Fecha": traz_fecha.strftime("%d/%m/%Y")}
                         pdf_bytes = generar_pdf_reporte("Control de Trazabilidad", encab_traz_pdf, df_traz_corregido)
                         id_d = subir_pdf_a_drive(f"Trazabilidad_{traz_fecha.strftime('%d%m%Y')}.pdf", pdf_bytes)
-                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {file_id})")
+                        st.success(f"✨ ¡Trazabilidad Respaldada! PDF en Drive exitoso (ID: {file_id})")    
             with col_btn4:
                 if st.button("🗑️ Vaciar Tabla Trazabilidad", use_container_width=True):
                     st.session_state.filas_trazabilidad = []
