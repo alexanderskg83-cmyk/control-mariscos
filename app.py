@@ -73,7 +73,7 @@ def subir_pdf_a_drive(nombre_archivo, pdf_bytes):
             file_metadata['parents'] = [folder_id]
             
         media = MediaIoBaseUpload(io.BytesIO(pdf_bytes), mimetype='application/pdf', resumable=True)
-        file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        file = service.files().create(body=file_metadata, media_body=media, fields='id',supportsAllDrives=True).execute()
         return file.get('id')
     except Exception as e:
         st.error(f"🚨 Error al subir a Google Drive: {e}")
